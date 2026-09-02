@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # Implementation of Layer Normalization and Complex Layer Normalization
 
 
-import numpy as np
-from tensorflow.keras.layers import Layer, InputSpec
-from tensorflow.keras import initializers, regularizers, constraints
 import tensorflow.keras.backend as K
+from tensorflow.keras import constraints
+from tensorflow.keras import initializers
+from tensorflow.keras import regularizers
+from tensorflow.keras.layers import InputSpec
+from tensorflow.keras.layers import Layer
+
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 
@@ -53,7 +55,7 @@ class LayerNormalization(Layer):
         gamma_init="ones",
         gamma_regularizer=None,
         beta_regularizer=None,
-        **kwargs
+        **kwargs,
     ):
 
         self.supports_masking = True
@@ -71,10 +73,10 @@ class LayerNormalization(Layer):
         shape = (input_shape[self.axis],)
 
         self.gamma = self.add_weight(
-            shape, initializer=self.gamma_init, regularizer=self.gamma_regularizer, name="{}_gamma".format(self.name)
+            shape, initializer=self.gamma_init, regularizer=self.gamma_regularizer, name=f"{self.name}_gamma",
         )
         self.beta = self.add_weight(
-            shape, initializer=self.beta_init, regularizer=self.beta_regularizer, name="{}_beta".format(self.name)
+            shape, initializer=self.beta_init, regularizer=self.beta_regularizer, name=f"{self.name}_beta",
         )
 
         self.built = True
@@ -110,7 +112,7 @@ class ComplexLayerNorm(Layer):
         beta_constraint=None,
         gamma_diag_constraint=None,
         gamma_off_constraint=None,
-        **kwargs
+        **kwargs,
     ):
 
         self.supports_masking = True
@@ -137,7 +139,7 @@ class ComplexLayerNorm(Layer):
             raise ValueError(
                 "Axis " + str(self.axis) + " of "
                 "input tensor should have a defined dimension "
-                "but the layer received an input with shape " + str(input_shape) + "."
+                "but the layer received an input with shape " + str(input_shape) + ".",
             )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 
@@ -222,7 +224,7 @@ class ComplexLayerNorm(Layer):
         else:
             raise ValueError(
                 "Incorrect Layernorm combination of axis and dimensions. axis should be either 1 or -1. "
-                "axis: " + str(self.axis) + "; ndim: " + str(ndim) + "."
+                "axis: " + str(self.axis) + "; ndim: " + str(ndim) + ".",
             )
         if self.scale:
             Vrr = K.mean(centred_squared_real, axis=reduction_axes) + self.epsilon

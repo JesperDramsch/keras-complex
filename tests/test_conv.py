@@ -1,10 +1,8 @@
 import unittest
 
-from tensorflow.keras.layers import Input, MaxPooling2D, Dense
-from tensorflow.keras.models import Model, Sequential
-import tensorflow as tf
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
 
-import numpy as np
 import complexnn as conn
 
 
@@ -40,7 +38,7 @@ class TestConvMethods(unittest.TestCase):
         """Test shape of model output, transposed"""
         inputs = Input(shape=(64, 64, 20))  # = 10 CDN filters
         outputs = conn.ComplexConv2D(
-            filters=2, kernel_size=3, strides=2, padding="same", transposed=True  # = 4 Keras filters
+            filters=2, kernel_size=3, strides=2, padding="same", transposed=True,  # = 4 Keras filters
         )(inputs)
         model = Model(inputs=inputs, outputs=outputs)
         true = (None, 128, 128, 4)

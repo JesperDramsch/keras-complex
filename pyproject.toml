@@ -46,4 +46,4 @@ changelog = "https://github.com/JesperDramsch/keras-complex/releases"
 bugtracker = "https://github.com/JesperDramsch/keras-complex/issues"
 
 [tool.setuptools.packages.find]
-exclude = ["tests*", "docs*"] 
+exclude = ["tests*", "docs*"]

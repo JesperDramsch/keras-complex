@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # Note: The implementation of complex Batchnorm is based on
 #       the Keras implementation of batch Normalization
@@ -7,9 +6,12 @@
 #       https://github.com/fchollet/keras/blob/master/keras/layers/normalization.py
 
 import numpy as np
-from tensorflow.keras.layers import Layer, InputSpec
-from tensorflow.keras import initializers, regularizers, constraints
 import tensorflow.keras.backend as K
+from tensorflow.keras import constraints
+from tensorflow.keras import initializers
+from tensorflow.keras import regularizers
+from tensorflow.keras.layers import InputSpec
+from tensorflow.keras.layers import Layer
 
 
 def sqrt_init(shape, dtype=None):
@@ -18,17 +20,15 @@ def sqrt_init(shape, dtype=None):
 
 
 def sanitizedInitGet(init):
-    if init in ["sqrt_init"]:
+    if init == "sqrt_init":
         return sqrt_init
-    else:
-        return initializers.get(init)
+    return initializers.get(init)
 
 
 def sanitizedInitSer(init):
-    if init in [sqrt_init]:
+    if init == sqrt_init:
         return "sqrt_init"
-    else:
-        return initializers.serialize(init)
+    return initializers.serialize(init)
 
 
 def complex_standardization(input_centred, Vrr, Vii, Vri, layernorm=False, axis=-1):
@@ -44,13 +44,14 @@ def complex_standardization(input_centred, Vrr, Vii, Vri, layernorm=False, axis=
         layernorm {bool} -- Normalization (default: {False})
         axis {int} -- Axis for Standardization (default: {-1})
 
-    Raises:
+    Raises
+    ------
         ValueError: Mismatched dimensoins
 
-    Returns:
+    Returns
+    -------
         Complex standardized input
     """
-
     ndim = K.ndim(input_centred)
     input_dim = K.shape(input_centred)[axis] // 2
     variances_broadcast = [1] * ndim
@@ -124,7 +125,7 @@ def complex_standardization(input_centred, Vrr, Vii, Vri, layernorm=False, axis=
         raise ValueError(
             "Incorrect Batchnorm combination of axis and dimensions. axis "
             "should be either 1 or -1. "
-            "axis: " + str(axis) + "; ndim: " + str(ndim) + "."
+            "axis: " + str(axis) + "; ndim: " + str(ndim) + ".",
         )
     rolled_input = K.concatenate([centred_imag, centred_real], axis=axis)
 
@@ -139,7 +140,7 @@ def complex_standardization(input_centred, Vrr, Vii, Vri, layernorm=False, axis=
 
 
 def ComplexBN(
-    input_centred, Vrr, Vii, Vri, beta, gamma_rr, gamma_ri, gamma_ii, scale=True, center=True, layernorm=False, axis=-1
+    input_centred, Vrr, Vii, Vri, beta, gamma_rr, gamma_ri, gamma_ii, scale=True, center=True, layernorm=False, axis=-1,
 ):
     """Complex Batch Normalization
 
@@ -159,13 +160,14 @@ def ComplexBN(
         layernorm {bool} -- Normalization (default: {False})
         axis {int} -- Axis for Standardization (default: {-1})
 
-    Raises:
+    Raises
+    ------
         ValueError: Dimonsional mismatch
 
-    Returns:
+    Returns
+    -------
         Batch-Normalized Input
     """
-
     ndim = K.ndim(input_centred)
     input_dim = K.shape(input_centred)[axis] // 2
     if scale:
@@ -212,7 +214,7 @@ def ComplexBN(
             raise ValueError(
                 "Incorrect Batchnorm combination of axis and dimensions. axis"
                 " should be either 1 or -1. "
-                "axis: " + str(axis) + "; ndim: " + str(ndim) + "."
+                "axis: " + str(axis) + "; ndim: " + str(ndim) + ".",
             )
         rolled_standardized_output = K.concatenate([centred_imag, centred_real], axis=axis)
         if center:
@@ -220,14 +222,11 @@ def ComplexBN(
             return (
                 cat_gamma_4_real * standardized_output + cat_gamma_4_imag * rolled_standardized_output + broadcast_beta
             )
-        else:
-            return cat_gamma_4_real * standardized_output + cat_gamma_4_imag * rolled_standardized_output
-    else:
-        if center:
-            broadcast_beta = K.reshape(beta, broadcast_beta_shape)
-            return input_centred + broadcast_beta
-        else:
-            return input_centred
+        return cat_gamma_4_real * standardized_output + cat_gamma_4_imag * rolled_standardized_output
+    if center:
+        broadcast_beta = K.reshape(beta, broadcast_beta_shape)
+        return input_centred + broadcast_beta
+    return input_centred
 
 
 class ComplexBatchNormalization(Layer):
@@ -294,7 +293,7 @@ class ComplexBatchNormalization(Layer):
         beta_constraint=None,
         gamma_diag_constraint=None,
         gamma_off_constraint=None,
-        **kwargs
+        **kwargs,
     ):
         super(ComplexBatchNormalization, self).__init__(**kwargs)
         self.supports_masking = True
@@ -325,7 +324,7 @@ class ComplexBatchNormalization(Layer):
             raise ValueError(
                 "Axis " + str(self.axis) + " of "
                 "input tensor should have a defined dimension "
-                "but the layer received an input with shape " + str(input_shape) + "."
+                "but the layer received an input with shape " + str(input_shape) + ".",
             )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 
@@ -354,13 +353,13 @@ class ComplexBatchNormalization(Layer):
                 constraint=self.gamma_off_constraint,
             )
             self.moving_Vrr = self.add_weight(
-                shape=param_shape, initializer=self.moving_variance_initializer, name="moving_Vrr", trainable=False
+                shape=param_shape, initializer=self.moving_variance_initializer, name="moving_Vrr", trainable=False,
             )
             self.moving_Vii = self.add_weight(
-                shape=param_shape, initializer=self.moving_variance_initializer, name="moving_Vii", trainable=False
+                shape=param_shape, initializer=self.moving_variance_initializer, name="moving_Vii", trainable=False,
             )
             self.moving_Vri = self.add_weight(
-                shape=param_shape, initializer=self.moving_covariance_initializer, name="moving_Vri", trainable=False
+                shape=param_shape, initializer=self.moving_covariance_initializer, name="moving_Vri", trainable=False,
             )
         else:
             self.gamma_rr = None
@@ -428,7 +427,7 @@ class ComplexBatchNormalization(Layer):
         else:
             raise ValueError(
                 "Incorrect Batchnorm combination of axis and dimensions. axis should be either 1 or -1. "
-                "axis: " + str(self.axis) + "; ndim: " + str(ndim) + "."
+                "axis: " + str(self.axis) + "; ndim: " + str(ndim) + ".",
             )
         if self.scale:
             Vrr = K.mean(centred_squared_real, axis=reduction_axes) + self.epsilon
@@ -460,34 +459,33 @@ class ComplexBatchNormalization(Layer):
         )
         if training in {0, False}:
             return input_bn
-        else:
-            update_list = []
-            if self.center:
-                update_list.append(K.moving_average_update(self.moving_mean, mu, self.momentum))
-            if self.scale:
-                update_list.append(K.moving_average_update(self.moving_Vrr, Vrr, self.momentum))
-                update_list.append(K.moving_average_update(self.moving_Vii, Vii, self.momentum))
-                update_list.append(K.moving_average_update(self.moving_Vri, Vri, self.momentum))
-            self.add_update(update_list)
+        update_list = []
+        if self.center:
+            update_list.append(K.moving_average_update(self.moving_mean, mu, self.momentum))
+        if self.scale:
+            update_list.append(K.moving_average_update(self.moving_Vrr, Vrr, self.momentum))
+            update_list.append(K.moving_average_update(self.moving_Vii, Vii, self.momentum))
+            update_list.append(K.moving_average_update(self.moving_Vri, Vri, self.momentum))
+        self.add_update(update_list)
 
-            def normalize_inference():
-                if self.center:
-                    inference_centred = inputs - K.reshape(self.moving_mean, broadcast_mu_shape)
-                else:
-                    inference_centred = inputs
-                return ComplexBN(
-                    inference_centred,
-                    self.moving_Vrr,
-                    self.moving_Vii,
-                    self.moving_Vri,
-                    self.beta,
-                    self.gamma_rr,
-                    self.gamma_ri,
-                    self.gamma_ii,
-                    self.scale,
-                    self.center,
-                    axis=self.axis,
-                )
+        def normalize_inference():
+            if self.center:
+                inference_centred = inputs - K.reshape(self.moving_mean, broadcast_mu_shape)
+            else:
+                inference_centred = inputs
+            return ComplexBN(
+                inference_centred,
+                self.moving_Vrr,
+                self.moving_Vii,
+                self.moving_Vri,
+                self.beta,
+                self.gamma_rr,
+                self.gamma_ri,
+                self.gamma_ii,
+                self.scale,
+                self.center,
+                axis=self.axis,
+            )
 
         # Pick the normalized form corresponding to the training phase.
         return K.in_train_phase(input_bn, normalize_inference, training=training)

@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-import tensorflow.keras.backend as KB
-import tensorflow.keras as KE
-import tensorflow.keras.layers as KL
-import tensorflow.keras.optimizers as KO
 import numpy as np
-
+import tensorflow.keras as KE
+import tensorflow.keras.backend as KB
+import tensorflow.keras.layers as KL
 
 #
 # Spectral Pooling Layer
@@ -106,8 +103,10 @@ class SpectralPooling2D(KL.Layer):
 
 
 if __name__ == "__main__":
-    import cv2, sys
+    import sys
+
     import __main__ as SP
+    import cv2
     import fft as CF
 
     # Build Model

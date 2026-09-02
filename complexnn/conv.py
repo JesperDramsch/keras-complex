@@ -1,20 +1,23 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
+import numpy as np
 import tensorflow as tf
+from tensorflow.keras import activations
 from tensorflow.keras import backend as K
-from tensorflow.keras import activations, initializers, regularizers, constraints
-from tensorflow.keras.layers import (
-    Layer,
-    InputSpec,
-)
+from tensorflow.keras import constraints
+from tensorflow.keras import initializers
+from tensorflow.keras import regularizers
+from tensorflow.keras.layers import InputSpec
+from tensorflow.keras.layers import Layer
 from tensorflow.python.keras.layers.convolutional import Conv
 from tensorflow.python.keras.utils import conv_utils
-import numpy as np
-from .fft import fft, ifft, fft2, ifft2
+
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
-from .init import ComplexInit, ComplexIndependentFilters
+from .fft import ifft
+from .fft import ifft2
+from .init import ComplexIndependentFilters
+from .init import ComplexInit
 
 
 def conv1d_transpose(
@@ -30,7 +33,8 @@ def conv1d_transpose(
     """Compatibility layer for nn.conv1d_transpose
 
     Take a filter defined for forward convolution and adjusts it for a
-    transposed convolution."""
+    transposed convolution.
+    """
     if isinstance(kernel_size, tuple):
         kernel_size = kernel_size[0]
     input_shape = inputs.shape
@@ -82,7 +86,8 @@ def conv2d_transpose(
     """Compatibility layer for K.conv2d_transpose
 
     Take a filter defined for forward convolution and adjusts it for a
-    transposed convolution."""
+    transposed convolution.
+    """
     input_shape = inputs.shape
     batch_size = input_shape[0]
     if data_format == "channels_first":
@@ -132,7 +137,7 @@ def ifft2(f):
 def conv_transpose_output_length(input_length, filter_size, padding, stride, dilation=1, output_padding=None):
     """Rearrange arguments for compatibility with conv_output_length."""
     if dilation != 1:
-        msg = f"Dilation must be 1 for transposed convolution. "
+        msg = "Dilation must be 1 for transposed convolution. "
         msg += f"Got dilation = {dilation}"
         raise ValueError(msg)
     # return conv_utils.deconv_length(
@@ -153,25 +158,23 @@ def conv_transpose_output_length(input_length, filter_size, padding, stride, dil
 
 
 def sanitizedInitGet(init):
-    """sanitizedInitGet"""
-    if init in ["sqrt_init"]:
+    """SanitizedInitGet"""
+    if init == "sqrt_init":
         return sqrt_init
-    elif init in ["complex", "complex_independent", "glorot_complex", "he_complex"]:
+    if init in ["complex", "complex_independent", "glorot_complex", "he_complex"]:
         return init
-    else:
-        return initializers.get(init)
+    return initializers.get(init)
 
 
 def sanitizedInitSer(init):
-    """sanitizedInitSer"""
-    if init in [sqrt_init]:
+    """SanitizedInitSer"""
+    if init == sqrt_init:
         return "sqrt_init"
-    elif init == "complex" or isinstance(init, ComplexInit):
+    if init == "complex" or isinstance(init, ComplexInit):
         return "complex"
-    elif init == "complex_independent" or isinstance(init, ComplexIndependentFilters):
+    if init == "complex_independent" or isinstance(init, ComplexIndependentFilters):
         return "complex_independent"
-    else:
-        return initializers.serialize(init)
+    return initializers.serialize(init)
 
 
 class ComplexConv(Layer):
@@ -315,13 +318,13 @@ class ComplexConv(Layer):
         self.bias = None
 
     def build(self, input_shape):
-        """build"""
+        """Build"""
         if self.data_format == "channels_first":
             channel_axis = 1
         else:
             channel_axis = -1
         if input_shape[channel_axis] is None:
-            raise ValueError("The channel dimension of the inputs " "should be defined. Found `None`.")
+            raise ValueError("The channel dimension of the inputs should be defined. Found `None`.")
         # Divide by 2 for real and complex input.
         input_dim = input_shape[channel_axis] // 2
         if False and self.transposed:
@@ -1083,7 +1086,7 @@ class WeightNorm_Conv(Conv):
         else:
             channel_axis = -1
         if input_shape[channel_axis] is None:
-            raise ValueError("The channel dimension of the inputs " "should be defined. Found `None`.")
+            raise ValueError("The channel dimension of the inputs should be defined. Found `None`.")
         input_dim = input_shape[channel_axis]
         gamma_shape = (input_dim * self.filters,)
         self.gamma = self.add_weight(
@@ -1101,7 +1104,7 @@ class WeightNorm_Conv(Conv):
         else:
             channel_axis = -1
         if input_shape[channel_axis] is None:
-            raise ValueError("The channel dimension of the inputs " "should be defined. Found `None`.")
+            raise ValueError("The channel dimension of the inputs should be defined. Found `None`.")
         input_dim = input_shape[channel_axis]
         ker_shape = self.kernel_size + (input_dim, self.filters)
         nb_kernels = ker_shape[-2] * ker_shape[-1]
