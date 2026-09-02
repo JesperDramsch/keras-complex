@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-from tensorflow.keras import backend as K
-from tensorflow.keras import backend as K
-from tensorflow.keras import activations, initializers, regularizers, constraints
-from tensorflow.keras.layers import Layer, InputSpec
 import numpy as np
 from numpy.random import RandomState
+from tensorflow.keras import activations
+from tensorflow.keras import backend as K
+from tensorflow.keras import constraints
+from tensorflow.keras import initializers
+from tensorflow.keras import regularizers
+from tensorflow.keras.layers import InputSpec
+from tensorflow.keras.layers import Layer
+
 from .utils import _compute_fans
 
 
@@ -69,7 +72,7 @@ class ComplexDense(Layer):
         kernel_constraint=None,
         bias_constraint=None,
         seed=None,
-        **kwargs
+        **kwargs,
     ):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
@@ -78,7 +81,7 @@ class ComplexDense(Layer):
         self.activation = activations.get(activation)
         self.use_bias = use_bias
         self.init_criterion = init_criterion
-        if kernel_initializer in {"complex"}:
+        if kernel_initializer == "complex":
             self.kernel_initializer = kernel_initializer
         else:
             self.kernel_initializer = initializers.get(kernel_initializer)
@@ -127,7 +130,7 @@ class ComplexDense(Layer):
         def init_w_imag(shape, dtype=None):
             return rng.normal(size=kernel_shape, loc=0, scale=s)  # .astype(dtype)
 
-        if self.kernel_initializer in {"complex"}:
+        if self.kernel_initializer == "complex":
             real_init = init_w_real
             imag_init = init_w_imag
         else:
@@ -190,7 +193,7 @@ class ComplexDense(Layer):
         return tuple(output_shape)
 
     def get_config(self):
-        if self.kernel_initializer in {"complex"}:
+        if self.kernel_initializer == "complex":
             ki = self.kernel_initializer
         else:
             ki = initializers.serialize(self.kernel_initializer)

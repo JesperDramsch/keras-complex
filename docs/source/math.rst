@@ -1,6 +1,6 @@
 Implementation and Math
 =========================
-Complex convolutional networks provide the benefit of explicitly modelling the phase space of physical systems :cite:`trabelsi2017deep`. 
+Complex convolutional networks provide the benefit of explicitly modelling the phase space of physical systems :cite:`trabelsi2017deep`.
 The complex convolution introduced can be explicitly implemented as convolutions of the real and complex components of both kernels and the data.
 A complex-valued data matrix in cartesian notation is defined as :math:`\textbf{M} = M_\Re + i M_\Im` and equally, the complex-valued convolutional kernel is defined as :math:`\textbf{K} = K_\Re + i K_\Im`.
 The individual coefficients :math:`(M_\Re, M_\Im, K_\Re, K_\Im)` are real-valued matrices, considering vectors are special cases of matrices with one of two dimensions being one.
@@ -45,7 +45,7 @@ where K is the Kernel and M is a data vector.
 
 Considerations
 -----------------
-Complex convolutional neural networks learn by back-propagation. 
+Complex convolutional neural networks learn by back-propagation.
 :cite:`Sarroff2015` state that the activation functions, as well as the loss function must be complex differentiable (holomorphic).
 :cite:`trabelsi2017deep` suggest that employing complex losses and activation functions is valid for speed, however, refers that :cite:`Hirose2012` show that complex-valued networks can be optimized individually with real-valued loss functions and contain piecewise real-valued activations.
 We reimplement the code :cite:`trabelsi2017deep` provides in keras with tensorflow , which provides convenience functions implementing a multitude of real-valued loss functions and activations.

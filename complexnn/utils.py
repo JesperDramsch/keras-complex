@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Layer, Lambda
 import numpy as np
-
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Layer
 
 #
 # GetReal/GetImag Lambda layer Implementation
@@ -23,9 +21,9 @@ def get_realpart(x):
     input_dim = input_shape[-1] // 2
     if ndim == 3:
         return x[:, :, :input_dim]
-    elif ndim == 4:
+    if ndim == 4:
         return x[:, :, :, :input_dim]
-    elif ndim == 5:
+    if ndim == 5:
         return x[:, :, :, :, :input_dim]
 
 
@@ -41,9 +39,9 @@ def get_imagpart(x):
     input_dim = input_shape[-1] // 2
     if ndim == 3:
         return x[:, :, input_dim:]
-    elif ndim == 4:
+    if ndim == 4:
         return x[:, :, :, input_dim:]
-    elif ndim == 5:
+    if ndim == 5:
         return x[:, :, :, :, input_dim:]
 
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import numpy as np
-from numpy.random import RandomState
 import tensorflow.keras.backend as K
+from numpy.random import RandomState
 from tensorflow.keras.initializers import Initializer
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object, deserialize_keras_object
+
 from .utils import _compute_fans
 
 
@@ -66,7 +65,6 @@ class IndependentFilters(Initializer):
 
         multip_constant = np.sqrt(desired_var / np.var(independent_filters))
         scaled_indep = multip_constant * independent_filters
-
 
         if self.weight_dim == 2 and self.nb_filters is None:
             weight = scaled_indep
@@ -226,7 +224,7 @@ class ComplexInit(Initializer):
 
         fan_in, fan_out = _compute_fans(
             # tuple(self.kernel_size) + (self.input_dim, self.nb_filters)
-            kernel_shape
+            kernel_shape,
         )
 
         # fix for ValueError: The initial value's shape (...) is not compatible with the explicitly supplied `shape` argument
