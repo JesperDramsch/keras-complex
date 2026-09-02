@@ -1,0 +1,63 @@
+Tests:
+- changed-files:
+  - any-glob-to-any-file: [ "tests/**/*" ]
+
+Dependencies:
+- changed-files:
+  - any-glob-to-any-file:
+    - "requirements.txt"
+    - "setup.py"
+    - "pyproject.toml"
+    - "poetry.lock"
+    - "pixi.toml"
+    - "pixi.lock"
+    - "Pipfile"
+    - "Pipfile.lock"
+    - "requirements/*.txt"
+    - "requirements/*.in"
+
+Build:
+- changed-files:
+  - any-glob-to-any-file:
+    - "Dockerfile*"
+    - "docker-compose*.yml"
+    - "Makefile"
+
+Documentation:
+- changed-files:
+  - any-glob-to-any-file:
+    - "docs/**/*"
+    - "*.md"
+    - "*.rst"
+
+Config:
+- changed-files:
+  - any-glob-to-any-file:
+    - ".pre-commit-config.yaml"
+    - "config/**/*"
+    - "settings/**/*"
+    - "*.ini"
+    - "*.cfg"
+    - "*.conf"
+
+CI/CD:
+- changed-files:
+  - any-glob-to-any-file:
+    - ".github/**/*"
+    - "tox.ini"
+    - ".coveragerc"
+
+# Add 'feature' label to any PR where the head branch name starts with `feature` or has a `feature` section in the name
+feature:
+- head-branch:
+  - '^feature'
+  - 'feature'
+
+# Add 'bugfix' label to branches with bug/fix/hotfix prefixes
+bugfix:
+- head-branch: [ '^bug', '^fix', '^hotfix' ]
+
+# Add 'breaking' label for major version bumps or breaking change commits
+breaking:
+- title: [ '^BREAKING CHANGE', 'BREAKING-CHANGE' ]
+- body: [ 'BREAKING CHANGE:', 'BREAKING-CHANGE:' ]
