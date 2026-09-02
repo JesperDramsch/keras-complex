@@ -1,0 +1,61 @@
+line-length = 120
+target-version = "py310"
+preview = true
+
+[lint]
+select = [
+    "A",    # flake8 builtins
+    "B",    # flake8-bugbear
+    "D",    # pydocstyle
+    "E",    # pycodestyle error
+    "W",    # pycodestyle warning
+    "F",    # flake8 error
+    "UP",   # Pyupgrade
+    "SIM",  # flake8-simplify
+    "N",    # pep8 naming
+    "YTT",  # flake8-2020
+    "S",    # bandit
+    "COM",  # Commas
+    "C4",   # Comprehensions
+    "DTZ",  # Datetimes
+    "ISC",  # Implicit string concatenation
+    "ICN",  # Import conventions
+    "LOG",  # Logging
+    "PIE",  # Misc lints
+    "PT",   # Pytest
+    "Q",    # Quotes
+    "RSE",  # Raises
+    "TID",  # Tidy imports
+    "PTH",  # Use Pathlib
+    "PGH",  # Pygrep hooks
+    "R",    # Refactor
+    "FLY",  # Fstrings
+    "PERF", # Perfomance linting
+    "FURB", # Modernising code
+    "RUF",  # Ruff specific
+    "NPY",  # Numpys
+    # "PL",  # Pylint
+    # "TD",  # Todos
+    # "FBT", # Boolean traps
+    # "CPY", # Copyright
+]
+ignore = [
+    "E203",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D401",
+    "S101",
+    "B028",
+    "B018",
+    "PT018",
+    "RET504",
+
+]
+
+
+[lint.pydocstyle]
+convention = "numpy"
