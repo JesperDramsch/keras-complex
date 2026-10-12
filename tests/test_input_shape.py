@@ -7,15 +7,22 @@ import complexnn as conn
 from complexnn.utils import _KERAS_3, _ignore_input_shape_warning
 
 # Keras 3 warns with this message when a layer receives input_shape or input_dim.
+# The filter in complexnn/utils.py matches this exact wording, so only
+# TestIgnoreInputShapeWarning, which checks that filter, uses it.
 INPUT_SHAPE_WARNING = "Do not pass an `input_shape`/`input_dim` argument"
 
 
 def input_shape_warnings(make_layer):
-    """Return the input_shape warnings that make_layer() raises"""
+    """Return every warning that make_layer() raises about input_shape or input_dim
+
+    The check does not depend on Keras's wording. If a Keras release rewords
+    its warning, the filter stops matching and this check sees the warning.
+    """
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         make_layer()
-    return [str(w.message) for w in caught if INPUT_SHAPE_WARNING in str(w.message)]
+    messages = [str(w.message) for w in caught]
+    return [m for m in messages if "input_shape" in m or "input_dim" in m]
 
 
 class TestInputShapeArgument(unittest.TestCase):
