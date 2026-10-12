@@ -1,10 +1,10 @@
 import unittest
 
-from tensorflow.keras.layers import Input, MaxPooling2D, Dense
-from tensorflow.keras.models import Model, Sequential
-import tensorflow as tf
-
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import Dense, Input, MaxPooling2D
+from tensorflow.keras.models import Model, Sequential
+
 import complexnn as conn
 
 
@@ -20,10 +20,18 @@ class TestTrainingRuns(unittest.TestCase):
         Y = X
         inputs = Input(shape=(64, 64, 2))
         conv1 = conn.ComplexConv2D(
-            filters=2, kernel_size=3, strides=2, padding="same", transposed=False  # = 4 Keras filters
+            filters=2,
+            kernel_size=3,
+            strides=2,
+            padding="same",
+            transposed=False,  # = 4 Keras filters
         )(inputs)
         outputs = conn.ComplexConv2D(
-            filters=1, kernel_size=3, strides=2, padding="same", transposed=True  # = 2 Keras filters => 1 complex layer
+            filters=1,
+            kernel_size=3,
+            strides=2,
+            padding="same",
+            transposed=True,  # = 2 Keras filters => 1 complex layer
         )(conv1)
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer="adam", loss="mean_squared_error", metrics=["accuracy"])

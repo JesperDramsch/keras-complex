@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # import tensorflow.keras.engine as KE
+import numpy as np
+import tensorflow as tf
 import tensorflow.keras.backend as KB
 import tensorflow.keras.layers as KL
 import tensorflow.keras.optimizers as KO
-import tensorflow as tf
-import numpy as np
-
 
 #
 # FFT functions:
@@ -26,10 +25,14 @@ def fft(z):
     Zr, Zi = tf.signal.rfft(z[:B]), tf.signal.rfft(z[B:])
     isOdd = tf.equal(L % 2, 1)
     Zr = tf.cond(
-        isOdd, tf.concat([Zr, C * Zr[:, 1:][:, ::-1]], axis=1), tf.concat([Zr, C * Zr[:, 1:-1][:, ::-1]], axis=1)
+        isOdd,
+        tf.concat([Zr, C * Zr[:, 1:][:, ::-1]], axis=1),
+        tf.concat([Zr, C * Zr[:, 1:-1][:, ::-1]], axis=1),
     )
     Zi = tf.cond(
-        isOdd, tf.concat([Zi, C * Zi[:, 1:][:, ::-1]], axis=1), tf.concat([Zi, C * Zi[:, 1:-1][:, ::-1]], axis=1)
+        isOdd,
+        tf.concat([Zi, C * Zi[:, 1:][:, ::-1]], axis=1),
+        tf.concat([Zi, C * Zi[:, 1:-1][:, ::-1]], axis=1),
     )
     Zi = (C * Zi)[:, :, ::-1]  # Zi * i
     Z = Zr + Zi
@@ -43,10 +46,14 @@ def ifft(z):
     Zr, Zi = tf.signal.rfft(z[:B]), tf.signal.rfft(z[B:] * -1)
     isOdd = tf.equal(L % 2, 1)
     Zr = tf.cond(
-        isOdd, tf.concat([Zr, C * Zr[:, 1:][:, ::-1]], axis=1), tf.concat([Zr, C * Zr[:, 1:-1][:, ::-1]], axis=1)
+        isOdd,
+        tf.concat([Zr, C * Zr[:, 1:][:, ::-1]], axis=1),
+        tf.concat([Zr, C * Zr[:, 1:-1][:, ::-1]], axis=1),
     )
     Zi = tf.cond(
-        isOdd, tf.concat([Zi, C * Zi[:, 1:][:, ::-1]], axis=1), tf.concat([Zi, C * Zi[:, 1:-1][:, ::-1]], axis=1)
+        isOdd,
+        tf.concat([Zi, C * Zi[:, 1:][:, ::-1]], axis=1),
+        tf.concat([Zi, C * Zi[:, 1:-1][:, ::-1]], axis=1),
     )
     Zi = (C * Zi)[:, :, ::-1]  # Zi * i
     Z = Zr + Zi

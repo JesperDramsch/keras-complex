@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import tensorflow.keras.backend as KB
+import numpy as np
 import tensorflow.keras as KE
+import tensorflow.keras.backend as KB
 import tensorflow.keras.layers as KL
 import tensorflow.keras.optimizers as KO
-import numpy as np
-
 
 #
 # Spectral Pooling Layer
@@ -37,14 +36,18 @@ class SpectralPooling1D(KL.Layer):
 
         if KB.image_data_format() == "channels_first":
             if topf[0] > 0 and xshape[2] >= 2 * topf[0]:
-                mask = [1] * (topf[0]) + [0] * (xshape[2] - 2 * topf[0]) + [1] * (topf[0])
+                mask = (
+                    [1] * (topf[0]) + [0] * (xshape[2] - 2 * topf[0]) + [1] * (topf[0])
+                )
                 mask = [[mask]]
                 mask = np.asarray(mask, dtype=KB.floatx()).transpose((0, 1, 2))
                 mask = KB.constant(mask)
                 x *= mask
         else:
             if topf[0] > 0 and xshape[1] >= 2 * topf[0]:
-                mask = [1] * (topf[0]) + [0] * (xshape[1] - 2 * topf[0]) + [1] * (topf[0])
+                mask = (
+                    [1] * (topf[0]) + [0] * (xshape[1] - 2 * topf[0]) + [1] * (topf[0])
+                )
                 mask = [[mask]]
                 mask = np.asarray(mask, dtype=KB.floatx()).transpose((0, 2, 1))
                 mask = KB.constant(mask)
@@ -77,26 +80,34 @@ class SpectralPooling2D(KL.Layer):
 
         if KB.image_data_format() == "channels_first":
             if topf[0] > 0 and xshape[2] >= 2 * topf[0]:
-                mask = [1] * (topf[0]) + [0] * (xshape[2] - 2 * topf[0]) + [1] * (topf[0])
+                mask = (
+                    [1] * (topf[0]) + [0] * (xshape[2] - 2 * topf[0]) + [1] * (topf[0])
+                )
                 mask = [[[mask]]]
                 mask = np.asarray(mask, dtype=KB.floatx()).transpose((0, 1, 3, 2))
                 mask = KB.constant(mask)
                 x *= mask
             if topf[1] > 0 and xshape[3] >= 2 * topf[1]:
-                mask = [1] * (topf[1]) + [0] * (xshape[3] - 2 * topf[1]) + [1] * (topf[1])
+                mask = (
+                    [1] * (topf[1]) + [0] * (xshape[3] - 2 * topf[1]) + [1] * (topf[1])
+                )
                 mask = [[[mask]]]
                 mask = np.asarray(mask, dtype=KB.floatx()).transpose((0, 1, 2, 3))
                 mask = KB.constant(mask)
                 x *= mask
         else:
             if topf[0] > 0 and xshape[1] >= 2 * topf[0]:
-                mask = [1] * (topf[0]) + [0] * (xshape[1] - 2 * topf[0]) + [1] * (topf[0])
+                mask = (
+                    [1] * (topf[0]) + [0] * (xshape[1] - 2 * topf[0]) + [1] * (topf[0])
+                )
                 mask = [[[mask]]]
                 mask = np.asarray(mask, dtype=KB.floatx()).transpose((0, 3, 1, 2))
                 mask = KB.constant(mask)
                 x *= mask
             if topf[1] > 0 and xshape[2] >= 2 * topf[1]:
-                mask = [1] * (topf[1]) + [0] * (xshape[2] - 2 * topf[1]) + [1] * (topf[1])
+                mask = (
+                    [1] * (topf[1]) + [0] * (xshape[2] - 2 * topf[1]) + [1] * (topf[1])
+                )
                 mask = [[[mask]]]
                 mask = np.asarray(mask, dtype=KB.floatx()).transpose((0, 1, 3, 2))
                 mask = KB.constant(mask)
@@ -106,9 +117,12 @@ class SpectralPooling2D(KL.Layer):
 
 
 if __name__ == "__main__":
-    import cv2, sys
-    import __main__ as SP
+    import sys
+
+    import cv2
     import fft as CF
+
+    import __main__ as SP
 
     # Build Model
     x = i = KL.Input(shape=(6, 512, 512))

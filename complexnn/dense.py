@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from tensorflow.keras import backend as K
-from tensorflow.keras import backend as K
-from tensorflow.keras import activations, initializers, regularizers, constraints
-from tensorflow.keras.layers import Layer, InputSpec
 import numpy as np
 from numpy.random import RandomState
+from tensorflow.keras import activations, constraints, initializers, regularizers
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import InputSpec, Layer
+
 from .utils import _compute_fans
 
 
@@ -69,7 +69,7 @@ class ComplexDense(Layer):
         kernel_constraint=None,
         bias_constraint=None,
         seed=None,
-        **kwargs
+        **kwargs,
     ):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
@@ -163,15 +163,21 @@ class ComplexDense(Layer):
         self.input_spec = InputSpec(ndim=2, axes={-1: 2 * input_dim})
         self.built = True
 
-    def call(self, inputs, **kwargs):
+    def call(self, inputs):
         input_shape = K.shape(inputs)
         input_dim = input_shape[-1] // 2
         real_input = inputs[:, :input_dim]
         imag_input = inputs[:, input_dim:]
 
-        cat_kernels_4_real = K.concatenate([self.real_kernel, -self.imag_kernel], axis=-1)
-        cat_kernels_4_imag = K.concatenate([self.imag_kernel, self.real_kernel], axis=-1)
-        cat_kernels_4_complex = K.concatenate([cat_kernels_4_real, cat_kernels_4_imag], axis=0)
+        cat_kernels_4_real = K.concatenate(
+            [self.real_kernel, -self.imag_kernel], axis=-1
+        )
+        cat_kernels_4_imag = K.concatenate(
+            [self.imag_kernel, self.real_kernel], axis=-1
+        )
+        cat_kernels_4_complex = K.concatenate(
+            [cat_kernels_4_real, cat_kernels_4_imag], axis=0
+        )
 
         output = K.dot(inputs, cat_kernels_4_complex)
 

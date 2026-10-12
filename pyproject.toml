@@ -38,6 +38,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+test = ["pytest"]
+
 [project.urls]
 homepage = "https://github.com/JesperDramsch/keras-complex/"
 documentation = "https://keras-complex.readthedocs.org"
@@ -46,4 +49,4 @@ changelog = "https://github.com/JesperDramsch/keras-complex/releases"
 bugtracker = "https://github.com/JesperDramsch/keras-complex/issues"
 
 [tool.setuptools.packages.find]
-exclude = ["tests*", "docs*"] 
+exclude = ["tests*", "docs*"]

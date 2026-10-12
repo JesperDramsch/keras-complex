@@ -1,10 +1,10 @@
 import unittest
 
-from tensorflow.keras.layers import Input, MaxPooling2D, Dense
-from tensorflow.keras.models import Model, Sequential
-import tensorflow as tf
-
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import Dense, Input, MaxPooling2D
+from tensorflow.keras.models import Model, Sequential
+
 import complexnn as conn
 
 

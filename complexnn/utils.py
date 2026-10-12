@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Layer, Lambda
 import numpy as np
-
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Lambda, Layer
 
 #
 # GetReal/GetImag Lambda layer Implementation

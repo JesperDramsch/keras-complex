@@ -4,7 +4,6 @@
 from . import bn, conv, dense, init, norm, pool
 
 # from . import fft
-
 from .bn import ComplexBatchNormalization as ComplexBN
 from .conv import (
     ComplexConv,
@@ -18,17 +17,17 @@ from .dense import ComplexDense
 # from .fft import (fft, ifft, fft2, ifft2, FFT, IFFT, FFT2, IFFT2)
 from .init import (
     ComplexIndependentFilters,
-    IndependentFilters,
     ComplexInit,
+    IndependentFilters,
     SqrtInit,
 )
-from .norm import LayerNormalization, ComplexLayerNorm
+from .norm import ComplexLayerNorm, LayerNormalization
 from .pool import SpectralPooling1D, SpectralPooling2D
 from .utils import (
-    get_realpart,
-    get_imagpart,
-    getpart_output_shape,
+    GetAbs,
     GetImag,
     GetReal,
-    GetAbs,
+    get_imagpart,
+    get_realpart,
+    getpart_output_shape,
 )

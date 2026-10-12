@@ -5,9 +5,10 @@
 
 
 import numpy as np
-from tensorflow.keras.layers import Layer, InputSpec
-from tensorflow.keras import initializers, regularizers, constraints
 import tensorflow.keras.backend as K
+from tensorflow.keras import constraints, initializers, regularizers
+from tensorflow.keras.layers import InputSpec, Layer
+
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 
@@ -53,9 +54,8 @@ class LayerNormalization(Layer):
         gamma_init="ones",
         gamma_regularizer=None,
         beta_regularizer=None,
-        **kwargs
+        **kwargs,
     ):
-
         self.supports_masking = True
         self.beta_init = initializers.get(beta_init)
         self.gamma_init = initializers.get(gamma_init)
@@ -67,14 +67,22 @@ class LayerNormalization(Layer):
         super(LayerNormalization, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: input_shape[self.axis]})
+        self.input_spec = InputSpec(
+            ndim=len(input_shape), axes={self.axis: input_shape[self.axis]}
+        )
         shape = (input_shape[self.axis],)
 
         self.gamma = self.add_weight(
-            shape, initializer=self.gamma_init, regularizer=self.gamma_regularizer, name="{}_gamma".format(self.name)
+            shape=shape,
+            initializer=self.gamma_init,
+            regularizer=self.gamma_regularizer,
+            name="{}_gamma".format(self.name),
         )
         self.beta = self.add_weight(
-            shape, initializer=self.beta_init, regularizer=self.beta_regularizer, name="{}_beta".format(self.name)
+            shape=shape,
+            initializer=self.beta_init,
+            regularizer=self.beta_regularizer,
+            name="{}_beta".format(self.name),
         )
 
         self.built = True
@@ -87,8 +95,12 @@ class LayerNormalization(Layer):
         config = {
             "epsilon": self.epsilon,
             "axis": self.axis,
-            "gamma_regularizer": self.gamma_regularizer.get_config() if self.gamma_regularizer else None,
-            "beta_regularizer": self.beta_regularizer.get_config() if self.beta_regularizer else None,
+            "gamma_regularizer": self.gamma_regularizer.get_config()
+            if self.gamma_regularizer
+            else None,
+            "beta_regularizer": self.beta_regularizer.get_config()
+            if self.beta_regularizer
+            else None,
         }
         base_config = super(LayerNormalization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -110,9 +122,8 @@ class ComplexLayerNorm(Layer):
         beta_constraint=None,
         gamma_diag_constraint=None,
         gamma_off_constraint=None,
-        **kwargs
+        **kwargs,
     ):
-
         self.supports_masking = True
         self.epsilon = epsilon
         self.axis = axis
@@ -130,7 +141,6 @@ class ComplexLayerNorm(Layer):
         super(ComplexLayerNorm, self).__init__(**kwargs)
 
     def build(self, input_shape):
-
         ndim = len(input_shape)
         dim = input_shape[self.axis]
         if dim is None:
@@ -182,7 +192,7 @@ class ComplexLayerNorm(Layer):
 
         self.built = True
 
-    def call(self, inputs, **kwargs):
+    def call(self, inputs):
         input_shape = K.shape(inputs)
         ndim = K.ndim(inputs)
         reduction_axes = list(range(ndim))
@@ -237,7 +247,9 @@ class ComplexLayerNorm(Layer):
             Vii = None
             Vri = None
         else:
-            raise ValueError("Error. Both scale and center in batchnorm are set to False.")
+            raise ValueError(
+                "Error. Both scale and center in batchnorm are set to False."
+            )
 
         return complex_normalization(
             input_centred,
@@ -261,10 +273,14 @@ class ComplexLayerNorm(Layer):
             "center": self.center,
             "scale": self.scale,
             "beta_initializer": initializers.serialize(self.beta_initializer),
-            "gamma_diag_initializer": initializers.serialize(self.gamma_diag_initializer),
+            "gamma_diag_initializer": initializers.serialize(
+                self.gamma_diag_initializer
+            ),
             "gamma_off_initializer": initializers.serialize(self.gamma_off_initializer),
             "beta_regularizer": regularizers.serialize(self.beta_regularizer),
-            "gamma_diag_regularizer": regularizers.serialize(self.gamma_diag_regularizer),
+            "gamma_diag_regularizer": regularizers.serialize(
+                self.gamma_diag_regularizer
+            ),
             "gamma_off_regularizer": regularizers.serialize(self.gamma_off_regularizer),
             "beta_constraint": constraints.serialize(self.beta_constraint),
             "gamma_diag_constraint": constraints.serialize(self.gamma_diag_constraint),

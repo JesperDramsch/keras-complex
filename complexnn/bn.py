@@ -7,9 +7,9 @@
 #       https://github.com/fchollet/keras/blob/master/keras/layers/normalization.py
 
 import numpy as np
-from tensorflow.keras.layers import Layer, InputSpec
-from tensorflow.keras import initializers, regularizers, constraints
 import tensorflow.keras.backend as K
+from tensorflow.keras import constraints, initializers, regularizers
+from tensorflow.keras.layers import InputSpec, Layer
 
 
 def sqrt_init(shape, dtype=None):
@@ -139,7 +139,18 @@ def complex_standardization(input_centred, Vrr, Vii, Vri, layernorm=False, axis=
 
 
 def ComplexBN(
-    input_centred, Vrr, Vii, Vri, beta, gamma_rr, gamma_ri, gamma_ii, scale=True, center=True, layernorm=False, axis=-1
+    input_centred,
+    Vrr,
+    Vii,
+    Vri,
+    beta,
+    gamma_rr,
+    gamma_ri,
+    gamma_ii,
+    scale=True,
+    center=True,
+    layernorm=False,
+    axis=-1,
 ):
     """Complex Batch Normalization
 
@@ -176,7 +187,9 @@ def ComplexBN(
         broadcast_beta_shape[axis] = input_dim * 2
 
     if scale:
-        standardized_output = complex_standardization(input_centred, Vrr, Vii, Vri, layernorm, axis=axis)
+        standardized_output = complex_standardization(
+            input_centred, Vrr, Vii, Vri, layernorm, axis=axis
+        )
 
         # Now we perform th scaling and Shifting of the normalized x using
         # the scaling parameter
@@ -194,8 +207,12 @@ def ComplexBN(
         broadcast_gamma_ri = K.reshape(gamma_ri, gamma_broadcast_shape)
         broadcast_gamma_ii = K.reshape(gamma_ii, gamma_broadcast_shape)
 
-        cat_gamma_4_real = K.concatenate([broadcast_gamma_rr, broadcast_gamma_ii], axis=axis)
-        cat_gamma_4_imag = K.concatenate([broadcast_gamma_ri, broadcast_gamma_ri], axis=axis)
+        cat_gamma_4_real = K.concatenate(
+            [broadcast_gamma_rr, broadcast_gamma_ii], axis=axis
+        )
+        cat_gamma_4_imag = K.concatenate(
+            [broadcast_gamma_ri, broadcast_gamma_ri], axis=axis
+        )
         if (axis == 1 and ndim != 3) or ndim == 2:
             centred_real = standardized_output[:, :input_dim]
             centred_imag = standardized_output[:, input_dim:]
@@ -214,14 +231,21 @@ def ComplexBN(
                 " should be either 1 or -1. "
                 "axis: " + str(axis) + "; ndim: " + str(ndim) + "."
             )
-        rolled_standardized_output = K.concatenate([centred_imag, centred_real], axis=axis)
+        rolled_standardized_output = K.concatenate(
+            [centred_imag, centred_real], axis=axis
+        )
         if center:
             broadcast_beta = K.reshape(beta, broadcast_beta_shape)
             return (
-                cat_gamma_4_real * standardized_output + cat_gamma_4_imag * rolled_standardized_output + broadcast_beta
+                cat_gamma_4_real * standardized_output
+                + cat_gamma_4_imag * rolled_standardized_output
+                + broadcast_beta
             )
         else:
-            return cat_gamma_4_real * standardized_output + cat_gamma_4_imag * rolled_standardized_output
+            return (
+                cat_gamma_4_real * standardized_output
+                + cat_gamma_4_imag * rolled_standardized_output
+            )
     else:
         if center:
             broadcast_beta = K.reshape(beta, broadcast_beta_shape)
@@ -294,7 +318,7 @@ class ComplexBatchNormalization(Layer):
         beta_constraint=None,
         gamma_diag_constraint=None,
         gamma_off_constraint=None,
-        **kwargs
+        **kwargs,
     ):
         super(ComplexBatchNormalization, self).__init__(**kwargs)
         self.supports_masking = True
@@ -308,7 +332,9 @@ class ComplexBatchNormalization(Layer):
         self.gamma_off_initializer = sanitizedInitGet(gamma_off_initializer)
         self.moving_mean_initializer = sanitizedInitGet(moving_mean_initializer)
         self.moving_variance_initializer = sanitizedInitGet(moving_variance_initializer)
-        self.moving_covariance_initializer = sanitizedInitGet(moving_covariance_initializer)
+        self.moving_covariance_initializer = sanitizedInitGet(
+            moving_covariance_initializer
+        )
         self.beta_regularizer = regularizers.get(beta_regularizer)
         self.gamma_diag_regularizer = regularizers.get(gamma_diag_regularizer)
         self.gamma_off_regularizer = regularizers.get(gamma_off_regularizer)
@@ -317,7 +343,6 @@ class ComplexBatchNormalization(Layer):
         self.gamma_off_constraint = constraints.get(gamma_off_constraint)
 
     def build(self, input_shape):
-
         ndim = len(input_shape)
 
         dim = input_shape[self.axis]
@@ -354,13 +379,22 @@ class ComplexBatchNormalization(Layer):
                 constraint=self.gamma_off_constraint,
             )
             self.moving_Vrr = self.add_weight(
-                shape=param_shape, initializer=self.moving_variance_initializer, name="moving_Vrr", trainable=False
+                shape=param_shape,
+                initializer=self.moving_variance_initializer,
+                name="moving_Vrr",
+                trainable=False,
             )
             self.moving_Vii = self.add_weight(
-                shape=param_shape, initializer=self.moving_variance_initializer, name="moving_Vii", trainable=False
+                shape=param_shape,
+                initializer=self.moving_variance_initializer,
+                name="moving_Vii",
+                trainable=False,
             )
             self.moving_Vri = self.add_weight(
-                shape=param_shape, initializer=self.moving_covariance_initializer, name="moving_Vri", trainable=False
+                shape=param_shape,
+                initializer=self.moving_covariance_initializer,
+                name="moving_Vri",
+                trainable=False,
             )
         else:
             self.gamma_rr = None
@@ -443,7 +477,9 @@ class ComplexBatchNormalization(Layer):
             Vii = None
             Vri = None
         else:
-            raise ValueError("Error. Both scale and center in batchnorm are set to False.")
+            raise ValueError(
+                "Error. Both scale and center in batchnorm are set to False."
+            )
 
         input_bn = ComplexBN(
             input_centred,
@@ -460,34 +496,43 @@ class ComplexBatchNormalization(Layer):
         )
         if training in {0, False}:
             return input_bn
-        else:
-            update_list = []
-            if self.center:
-                update_list.append(K.moving_average_update(self.moving_mean, mu, self.momentum))
-            if self.scale:
-                update_list.append(K.moving_average_update(self.moving_Vrr, Vrr, self.momentum))
-                update_list.append(K.moving_average_update(self.moving_Vii, Vii, self.momentum))
-                update_list.append(K.moving_average_update(self.moving_Vri, Vri, self.momentum))
-            self.add_update(update_list)
+        update_list = []
+        if self.center:
+            update_list.append(
+                K.moving_average_update(self.moving_mean, mu, self.momentum)
+            )
+        if self.scale:
+            update_list.append(
+                K.moving_average_update(self.moving_Vrr, Vrr, self.momentum)
+            )
+            update_list.append(
+                K.moving_average_update(self.moving_Vii, Vii, self.momentum)
+            )
+            update_list.append(
+                K.moving_average_update(self.moving_Vri, Vri, self.momentum)
+            )
+        self.add_update(update_list)
 
-            def normalize_inference():
-                if self.center:
-                    inference_centred = inputs - K.reshape(self.moving_mean, broadcast_mu_shape)
-                else:
-                    inference_centred = inputs
-                return ComplexBN(
-                    inference_centred,
-                    self.moving_Vrr,
-                    self.moving_Vii,
-                    self.moving_Vri,
-                    self.beta,
-                    self.gamma_rr,
-                    self.gamma_ri,
-                    self.gamma_ii,
-                    self.scale,
-                    self.center,
-                    axis=self.axis,
+        def normalize_inference():
+            if self.center:
+                inference_centred = inputs - K.reshape(
+                    self.moving_mean, broadcast_mu_shape
                 )
+            else:
+                inference_centred = inputs
+            return ComplexBN(
+                inference_centred,
+                self.moving_Vrr,
+                self.moving_Vii,
+                self.moving_Vri,
+                self.beta,
+                self.gamma_rr,
+                self.gamma_ri,
+                self.gamma_ii,
+                self.scale,
+                self.center,
+                axis=self.axis,
+            )
 
         # Pick the normalized form corresponding to the training phase.
         return K.in_train_phase(input_bn, normalize_inference, training=training)
@@ -503,10 +548,16 @@ class ComplexBatchNormalization(Layer):
             "gamma_diag_initializer": sanitizedInitSer(self.gamma_diag_initializer),
             "gamma_off_initializer": sanitizedInitSer(self.gamma_off_initializer),
             "moving_mean_initializer": sanitizedInitSer(self.moving_mean_initializer),
-            "moving_variance_initializer": sanitizedInitSer(self.moving_variance_initializer),
-            "moving_covariance_initializer": sanitizedInitSer(self.moving_covariance_initializer),
+            "moving_variance_initializer": sanitizedInitSer(
+                self.moving_variance_initializer
+            ),
+            "moving_covariance_initializer": sanitizedInitSer(
+                self.moving_covariance_initializer
+            ),
             "beta_regularizer": regularizers.serialize(self.beta_regularizer),
-            "gamma_diag_regularizer": regularizers.serialize(self.gamma_diag_regularizer),
+            "gamma_diag_regularizer": regularizers.serialize(
+                self.gamma_diag_regularizer
+            ),
             "gamma_off_regularizer": regularizers.serialize(self.gamma_off_regularizer),
             "beta_constraint": constraints.serialize(self.beta_constraint),
             "gamma_diag_constraint": constraints.serialize(self.gamma_diag_constraint),
