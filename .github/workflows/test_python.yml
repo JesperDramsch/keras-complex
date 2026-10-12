@@ -1,32 +1,68 @@
 name: Test Python package
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
-  build:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.12"
+      # Stop on syntax errors and undefined names only.
+      - run: uvx flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
+  test:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-
+        include:
+          - name: Keras 3, Python 3.11
+            python: "3.11"
+            packages: tensorflow
+          - name: Keras 3, Python 3.12
+            python: "3.12"
+            packages: tensorflow
+          - name: Keras 3, Python 3.13
+            python: "3.13"
+            packages: tensorflow
+          # TensorFlow 2.15 is the last release with Keras 2 by default.
+          - name: Keras 2 (TensorFlow 2.15), Python 3.11
+            python: "3.11"
+            packages: tensorflow==2.15.1
+          # Newer TensorFlow can still run Keras 2 through tf-keras.
+          - name: Keras 2 (tf-keras), Python 3.11
+            python: "3.11"
+            packages: tensorflow tf-keras
+            legacy-keras: "1"
+    env:
+      TF_USE_LEGACY_KERAS: ${{ matrix.legacy-keras }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v7
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+          # setuptools-scm needs the tags to compute the version.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: ${{ matrix.python }}
+          activate-environment: true
+      - name: Install
+        run: uv pip install -e . pytest ${{ matrix.packages }}
+      - name: Versions
+        shell: python
         run: |
-          python -m pip install --upgrade pip
-          pip install flake8 pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Test with pytest
-        run: |
-          pytest
+          from importlib import metadata
+
+          for package in ("tensorflow", "keras", "tf-keras"):
+              try:
+                  print(package, metadata.version(package))
+              except metadata.PackageNotFoundError:
+                  print(package, "not installed")
+      - name: Test
+        run: pytest
