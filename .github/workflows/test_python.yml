@@ -13,8 +13,18 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.12"
-      # Stop on syntax errors and undefined names only.
-      - run: uvx flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      # Run the ruff release that .pre-commit-config.yaml pins, so this job and the
+      # pre-commit hooks agree when pre-commit.ci updates the pin.
+      - name: Find the ruff version
+        id: ruff
+        run: |
+          version=$(grep -A1 "astral-sh/ruff-pre-commit" .pre-commit-config.yaml | sed -n "s/^ *rev: *v//p")
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: ruff check
+        run: uvx "ruff@${{ steps.ruff.outputs.version }}" check --output-format=github .
+      - name: ruff format
+        run: uvx "ruff@${{ steps.ruff.outputs.version }}" format --check --diff .
 
   # 0.2.3 shipped invalid metadata that pip 24.1 and later refuse to install.
   # Build the package and install it the way users do before any release.

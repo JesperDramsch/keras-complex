@@ -8,6 +8,8 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
+  # The lint job in .github/workflows/test_python.yml reads this rev, so keep it
+  # on the line directly below the repo line.
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.0
     hooks:
