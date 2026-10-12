@@ -43,3 +43,13 @@ class TestLayerNormalizationConfig(unittest.TestCase):
         self.assertIsInstance(clone.beta_init, tf.keras.initializers.Ones)
         self.assertIsInstance(clone.gamma_init, tf.keras.initializers.Zeros)
         self.assertAlmostEqual(clone.gamma_regularizer.get_config()["l2"], 0.01)
+
+
+class TestComplexLayerNormShape(unittest.TestCase):
+    """ComplexLayerNorm keeps the input shape"""
+
+    def test_compute_output_shape(self):
+        layer = conn.ComplexLayerNorm()
+        for shape in [(None, 8), (None, 4, 4, 8)]:
+            with self.subTest(shape=shape):
+                self.assertEqual(tuple(layer.compute_output_shape(shape)), shape)

@@ -529,6 +529,11 @@ class ComplexBatchNormalization(Layer):
             axis=self.axis,
         )
 
+    def compute_output_shape(self, input_shape):
+        # Normalisation keeps the shape. Defining it lets Keras 3 skip
+        # tracing call() to infer the output shape.
+        return input_shape
+
     def get_config(self):
         config = {
             "axis": self.axis,

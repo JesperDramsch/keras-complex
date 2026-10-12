@@ -48,3 +48,13 @@ class TestComplexBatchNormalization(unittest.TestCase):
             self.x, np.zeros_like(self.x), batch_size=32, epochs=1, verbose=0
         )
         self.assertFalse(np.allclose(self.bn.moving_mean.numpy(), before))
+
+
+class TestComplexBatchNormalizationShape(unittest.TestCase):
+    """ComplexBatchNormalization keeps the input shape"""
+
+    def test_compute_output_shape(self):
+        layer = conn.ComplexBN()
+        for shape in [(None, 8), (None, 4, 4, 8)]:
+            with self.subTest(shape=shape):
+                self.assertEqual(tuple(layer.compute_output_shape(shape)), shape)
