@@ -1,18 +1,24 @@
 name: Publish to PyPI.org
+
+# Publishing a GitHub release is the only way to upload to PyPI.
 on:
-  workflow_dispatch:
   release:
     types: [published]
+
 jobs:
   pypi:
     runs-on: ubuntu-latest
+    # Must match the environment in the PyPI trusted publisher settings.
+    environment: PyPI
+    permissions:
+      # Trusted publishing: PyPI accepts this job's OIDC token instead of an API token.
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
+          # setuptools-scm needs the tags to compute the version.
           fetch-depth: 0
-      - run: python3 -m pip install --upgrade build && python3 -m build
+      - uses: astral-sh/setup-uv@v10.3.0
+      - run: uv build
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
