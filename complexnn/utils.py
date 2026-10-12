@@ -3,7 +3,7 @@
 
 import numpy as np
 import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Lambda, Layer
+from tensorflow.keras.layers import Layer
 
 #
 # GetReal/GetImag Lambda layer Implementation

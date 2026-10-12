@@ -18,7 +18,6 @@ from tensorflow.python.keras.layers.convolutional import Conv
 from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
-from .fft import fft, fft2, ifft, ifft2
 from .init import ComplexIndependentFilters, ComplexInit
 
 

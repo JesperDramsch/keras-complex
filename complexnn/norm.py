@@ -4,7 +4,6 @@
 # Implementation of Layer Normalization and Complex Layer Normalization
 
 
-import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
