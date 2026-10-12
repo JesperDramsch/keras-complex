@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-from . import bn, conv, dense, fft, init, norm, pool, utils
+from . import bn, conv, conv_utils, dense, fft, init, norm, pool, utils
 from .bn import ComplexBatchNormalization as ComplexBN
 from .conv import (
     ComplexConv,
@@ -33,6 +32,7 @@ from .utils import (
 __all__ = [
     "bn",
     "conv",
+    "conv_utils",
     "dense",
     "fft",
     "init",

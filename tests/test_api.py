@@ -6,6 +6,7 @@ import complexnn
 PUBLIC_NAMES = {
     "bn",
     "conv",
+    "conv_utils",
     "dense",
     "fft",
     "init",
