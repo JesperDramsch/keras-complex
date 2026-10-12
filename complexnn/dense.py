@@ -8,7 +8,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
 from tensorflow.keras.utils import register_keras_serializable
 
-from .utils import _compute_fans, get_initializer
+from .utils import _compute_fans, _ignore_input_shape_warning, get_initializer
 
 
 @register_keras_serializable(package="complexnn")
@@ -75,7 +75,8 @@ class ComplexDense(Layer):
     ):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
-        super(ComplexDense, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(ComplexDense, self).__init__(**kwargs)
         self.units = units
         self.activation = activations.get(activation)
         self.use_bias = use_bias

@@ -6,10 +6,6 @@ import tensorflow.keras.backend as K
 from numpy.random import RandomState
 from tensorflow.keras.initializers import Initializer
 from tensorflow.keras.utils import register_keras_serializable
-from tensorflow.python.keras.utils.generic_utils import (
-    deserialize_keras_object,
-    serialize_keras_object,
-)
 
 from .utils import _compute_fans
 

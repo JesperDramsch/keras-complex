@@ -4,7 +4,6 @@
 # Implementation of Layer Normalization and Complex Layer Normalization
 
 
-import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
@@ -12,6 +11,7 @@ from tensorflow.keras.utils import register_keras_serializable
 
 from .bn import ComplexBN as complex_normalization
 from .bn import sanitizedInitGet, sanitizedInitSer, sqrt_init
+from .utils import _ignore_input_shape_warning
 
 
 def layernorm(x, axis, epsilon, gamma, beta):
@@ -66,7 +66,8 @@ class LayerNormalization(Layer):
         self.gamma_regularizer = regularizers.get(gamma_regularizer)
         self.beta_regularizer = regularizers.get(beta_regularizer)
 
-        super(LayerNormalization, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(LayerNormalization, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.input_spec = InputSpec(
@@ -141,7 +142,8 @@ class ComplexLayerNorm(Layer):
         self.beta_constraint = constraints.get(beta_constraint)
         self.gamma_diag_constraint = constraints.get(gamma_diag_constraint)
         self.gamma_off_constraint = constraints.get(gamma_off_constraint)
-        super(ComplexLayerNorm, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(ComplexLayerNorm, self).__init__(**kwargs)
 
     def build(self, input_shape):
         ndim = len(input_shape)

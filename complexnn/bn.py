@@ -14,6 +14,8 @@ from tensorflow.keras.utils import register_keras_serializable
 
 from .utils import get_initializer
 
+from .utils import _ignore_input_shape_warning
+
 
 def sqrt_init(shape, dtype=None):
     value = (1 / np.sqrt(2)) * K.ones(shape)
@@ -324,7 +326,8 @@ class ComplexBatchNormalization(Layer):
         gamma_off_constraint=None,
         **kwargs,
     ):
-        super(ComplexBatchNormalization, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(ComplexBatchNormalization, self).__init__(**kwargs)
         self.supports_masking = True
         self.axis = axis
         self.momentum = momentum

@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow.keras as KE
 import tensorflow.keras.backend as KB
 import tensorflow.keras.layers as KL
-import tensorflow.keras.optimizers as KO
 from tensorflow.keras.utils import register_keras_serializable
 
 #
