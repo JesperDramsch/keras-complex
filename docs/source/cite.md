@@ -1,5 +1,5 @@
 Citation
---------
+========
 
 Find the CITATION file called CITATION.cff on Github or cite this software version as:
 

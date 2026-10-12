@@ -20,6 +20,7 @@ Contents
    Contributing <contrib>
    math
    cite
+   License <license>
 
 Indices and tables
 ==================
