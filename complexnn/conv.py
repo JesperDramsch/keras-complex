@@ -336,8 +336,7 @@ class ComplexConv(Layer):
             channel_axis = -1
         if input_shape[channel_axis] is None:
             raise ValueError(
-                "The channel dimension of the inputs "
-                "should be defined. Found `None`."
+                "The channel dimension of the inputs should be defined. Found `None`."
             )
         # Divide by 2 for real and complex input.
         input_dim = input_shape[channel_axis] // 2
@@ -1091,8 +1090,7 @@ class WeightNorm_Conv(Conv):
             channel_axis = -1
         if input_shape[channel_axis] is None:
             raise ValueError(
-                "The channel dimension of the inputs "
-                "should be defined. Found `None`."
+                "The channel dimension of the inputs should be defined. Found `None`."
             )
         input_dim = input_shape[channel_axis]
         gamma_shape = (input_dim * self.filters,)
@@ -1112,8 +1110,7 @@ class WeightNorm_Conv(Conv):
             channel_axis = -1
         if input_shape[channel_axis] is None:
             raise ValueError(
-                "The channel dimension of the inputs "
-                "should be defined. Found `None`."
+                "The channel dimension of the inputs should be defined. Found `None`."
             )
         input_dim = input_shape[channel_axis]
         ker_shape = self.kernel_size + (input_dim, self.filters)
