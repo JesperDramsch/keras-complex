@@ -7,7 +7,7 @@ from tensorflow.keras import activations, constraints, initializers, regularizer
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
 
-from .utils import _compute_fans
+from .utils import _compute_fans, _ignore_input_shape_warning
 
 
 class ComplexDense(Layer):
@@ -73,7 +73,8 @@ class ComplexDense(Layer):
     ):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
-        super(ComplexDense, self).__init__(**kwargs)
+        with _ignore_input_shape_warning():
+            super(ComplexDense, self).__init__(**kwargs)
         self.units = units
         self.activation = activations.get(activation)
         self.use_bias = use_bias

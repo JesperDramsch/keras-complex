@@ -1,9 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import contextlib
+import re
+import warnings
+
 import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Layer
+
+# Keras 3 warns whenever a layer receives `input_shape` or `input_dim` and
+# recommends `keras.Input(shape)` instead. The complex layers keep accepting
+# both arguments, as Keras 2 documented them, and Keras 3's Sequential still
+# turns them into an input layer, so for these layers the warning is noise.
+_INPUT_SHAPE_WARNING = re.escape("Do not pass an `input_shape`/`input_dim` argument")
+
+
+@contextlib.contextmanager
+def _ignore_input_shape_warning():
+    """Ignore Keras 3's input_shape/input_dim warning inside the block.
+
+    The layers wrap their call to ``Layer.__init__`` with it. Keras 2 never
+    emits the warning, so there the block changes nothing. Like any use of
+    ``warnings.catch_warnings``, it changes the process-wide warning filters
+    while it runs.
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message=_INPUT_SHAPE_WARNING, category=UserWarning
+        )
+        yield
+
 
 #
 # GetReal/GetImag Lambda layer Implementation

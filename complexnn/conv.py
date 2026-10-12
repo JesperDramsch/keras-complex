@@ -19,6 +19,7 @@ from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .init import ComplexIndependentFilters, ComplexInit
+from .utils import _ignore_input_shape_warning
 
 
 def conv1d_transpose(
@@ -280,7 +281,8 @@ class ComplexConv(Layer):
         epsilon=1e-7,
         **kwargs,
     ):
-        super(ComplexConv, self).__init__(**kwargs)
+        with _ignore_input_shape_warning():
+            super(ComplexConv, self).__init__(**kwargs)
         self.rank = rank
         self.filters = filters
         self.kernel_size = conv_utils.normalize_tuple(kernel_size, rank, "kernel_size")
