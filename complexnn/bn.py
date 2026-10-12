@@ -267,10 +267,11 @@ class ComplexBatchNormalization(Layer):
 
     Arguments:
         axis: Integer, the axis that should be normalized
-            (typically the features axis).
+            (typically the features axis). It holds the real parts
+            followed by the imaginary parts, so its size must be even.
             For instance, after a `Conv2D` layer with
             `data_format="channels_first"`,
-            set `axis=2` in `ComplexBatchNormalization`.
+            set `axis=1` in `ComplexBatchNormalization`.
         momentum: Momentum for the moving statistics related to the real and
             imaginary parts.
         epsilon: Small float added to each of the variances related to the

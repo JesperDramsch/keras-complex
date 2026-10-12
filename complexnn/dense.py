@@ -51,11 +51,14 @@ class ComplexDense(Layer):
             (see keras.constraints).
 
     Input shape:
-        a 2D input with shape `(batch_size, input_dim)`.
+        a 2D input with shape `(batch_size, input_dim)`. The first half of
+        `input_dim` holds the real parts and the second half the imaginary
+        parts, so `input_dim` must be even.
 
     Output shape:
         For a 2D input with shape `(batch_size, input_dim)`,
-        the output would have shape `(batch_size, units)`.
+        the output would have shape `(batch_size, 2 x units)`,
+        with the real parts in the first `units` features.
     """
 
     def __init__(

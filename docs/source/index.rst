@@ -16,6 +16,7 @@ Contents
 
    Introduction <intro>
    Installation <install>
+   Data layout <layout>
    API <api/api_toc>
    Contributing <contrib>
    math
