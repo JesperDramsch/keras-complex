@@ -5,13 +5,14 @@ import numpy as np
 import tensorflow.keras as KE
 import tensorflow.keras.backend as KB
 import tensorflow.keras.layers as KL
-import tensorflow.keras.optimizers as KO
+from tensorflow.keras.utils import register_keras_serializable
 
 #
 # Spectral Pooling Layer
 #
 
 
+@register_keras_serializable(package="complexnn")
 class SpectralPooling1D(KL.Layer):
     def __init__(self, topf=(0,), **kwargs):
         super(SpectralPooling1D, self).__init__()
@@ -56,6 +57,7 @@ class SpectralPooling1D(KL.Layer):
         return x
 
 
+@register_keras_serializable(package="complexnn")
 class SpectralPooling2D(KL.Layer):
     def __init__(self, **kwargs):
         super(SpectralPooling2D, self).__init__()

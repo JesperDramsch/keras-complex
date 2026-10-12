@@ -56,3 +56,62 @@ class TestConvMethods(unittest.TestCase):
         true = (None, 128, 128, 4)
         calc = model.output_shape
         self.assertEqual(true, calc)
+
+
+class TestConvConfig(unittest.TestCase):
+    """Conv layer configs rebuild the same layer"""
+
+    def test_conv1d_from_config(self):
+        """ComplexConv1D sets data_format itself, so its config must not repeat it"""
+        layer = conn.ComplexConv1D(filters=2, kernel_size=3, padding="same")
+        config = layer.get_config()
+        clone = conn.ComplexConv1D.from_config(config)
+        self.assertEqual(clone.get_config(), config)
+        self.assertEqual(clone.data_format, "channels_last")
+
+    def test_epsilon_in_config(self):
+        """epsilon changes the normalised kernel, so from_config must keep it"""
+        layer = conn.ComplexConv2D(
+            filters=2, kernel_size=3, normalize_weight=True, epsilon=1e-3
+        )
+        clone = conn.ComplexConv2D.from_config(layer.get_config())
+        self.assertEqual(clone.epsilon, 1e-3)
+
+    def test_complex_initializer_instance_in_config(self):
+        """A complexnn initialiser instance keeps its own config, seed included"""
+        initializers = [
+            conn.ComplexInit(
+                kernel_size=(3, 3),
+                input_dim=2,
+                weight_dim=2,
+                nb_filters=2,
+                criterion="glorot",
+                seed=5,
+            ),
+            conn.ComplexIndependentFilters(
+                kernel_size=(3, 3),
+                input_dim=2,
+                weight_dim=2,
+                nb_filters=2,
+                criterion="he",
+                seed=5,
+            ),
+        ]
+        for init in initializers:
+            with self.subTest(type(init).__name__):
+                layer = conn.ComplexConv2D(
+                    filters=2, kernel_size=3, kernel_initializer=init
+                )
+                config = layer.get_config()
+                clone = conn.ComplexConv2D.from_config(config)
+                self.assertIs(type(clone.kernel_initializer), type(init))
+                self.assertEqual(
+                    clone.kernel_initializer.get_config(), init.get_config()
+                )
+                self.assertEqual(clone.get_config(), config)
+
+                layer.build((None, 6, 6, 4))
+                clone.build((None, 6, 6, 4))
+                np.testing.assert_array_equal(
+                    np.asarray(clone.kernel), np.asarray(layer.kernel)
+                )

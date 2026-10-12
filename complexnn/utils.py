@@ -1,9 +1,74 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import contextlib
+import re
+import warnings
+
 import numpy as np
+import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Lambda, Layer
+from tensorflow.keras import initializers
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.utils import get_registered_object, register_keras_serializable
+
+# Keras 3 warns whenever a layer receives `input_shape` or `input_dim` and
+# recommends `keras.Input(shape)` instead. The complex layers keep accepting
+# both arguments, as Keras 2 documented them, and Keras 3's Sequential still
+# turns them into an input layer, so for these layers the warning is noise.
+_INPUT_SHAPE_WARNING = re.escape("Do not pass an `input_shape`/`input_dim` argument")
+
+# Only Keras 3 emits that warning. Keras 3 has `keras.version()`; Keras 2 and
+# tf-keras do not.
+_KERAS_3 = hasattr(tf.keras, "version") and int(tf.keras.version().split(".")[0]) >= 3
+
+
+@contextlib.contextmanager
+def _ignore_input_shape_warning(kwargs):
+    """Ignore Keras 3's input_shape/input_dim warning inside the block.
+
+    The layers wrap their call to ``Layer.__init__(**kwargs)`` with it. The
+    warning filters change only when the warning can fire: on Keras 3, and only
+    when kwargs holds ``input_shape`` or ``input_dim``. Otherwise the block
+    does nothing.
+
+    Trade-off: ``warnings.catch_warnings`` makes Python forget which warnings
+    it has already shown. So on Keras 3, every layer built with
+    ``input_shape`` or ``input_dim`` lets warnings that normally show once per
+    place in the code show again. A filter installed once at import would avoid
+    that, but any ``warnings.simplefilter("always")`` set later would override
+    it and bring the input_shape warning back. While the filter applies it also
+    changes the process-wide filters, like any use of ``catch_warnings``, so it
+    is not thread-safe.
+    """
+    if not _KERAS_3 or not ("input_shape" in kwargs or "input_dim" in kwargs):
+        yield
+        return
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message=_INPUT_SHAPE_WARNING, category=UserWarning
+        )
+        yield
+
+
+def get_initializer(identifier):
+    """Resolve an initialiser like ``initializers.get``, complexnn ones included.
+
+    The legacy .h5 loader looks a serialised initialiser up by its bare class
+    name, while complexnn registers its classes as ``complexnn>ClassName``, so
+    a ``ComplexInit`` saved with its config would not load. When Keras cannot
+    resolve such a config, look it up by its registered name instead.
+    """
+    try:
+        return initializers.get(identifier)
+    except (ValueError, TypeError):
+        if isinstance(identifier, dict):
+            registered = str(identifier.get("registered_name") or "")
+            cls = get_registered_object(registered) if registered else None
+            if cls is not None and registered.startswith("complexnn>"):
+                return cls.from_config(identifier.get("config") or {})
+        raise
+
 
 #
 # GetReal/GetImag Lambda layer Implementation
@@ -182,16 +247,19 @@ class _ComplexPart(Layer):
         return getpart_output_shape(input_shape)
 
 
+@register_keras_serializable(package="complexnn")
 class GetReal(_ComplexPart):
     def _split(self, inputs):
         return get_realpart(inputs)
 
 
+@register_keras_serializable(package="complexnn")
 class GetImag(_ComplexPart):
     def _split(self, inputs):
         return get_imagpart(inputs)
 
 
+@register_keras_serializable(package="complexnn")
 class GetAbs(_ComplexPart):
     def _split(self, inputs):
         return get_abs(inputs)

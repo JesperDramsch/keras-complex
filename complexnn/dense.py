@@ -6,10 +6,17 @@ from numpy.random import RandomState
 from tensorflow.keras import activations, constraints, initializers, regularizers
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.keras.utils import register_keras_serializable
 
-from .utils import _check_complex_axis, _compute_fans
+from .utils import (
+    _check_complex_axis,
+    _compute_fans,
+    _ignore_input_shape_warning,
+    get_initializer,
+)
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexDense(Layer):
     """Regular complex densely-connected NN layer.
     `Dense` implements the operation:
@@ -79,16 +86,19 @@ class ComplexDense(Layer):
     ):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
-        super(ComplexDense, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(ComplexDense, self).__init__(**kwargs)
         self.units = units
         self.activation = activations.get(activation)
         self.use_bias = use_bias
         self.init_criterion = init_criterion
-        if kernel_initializer in {"complex"}:
+        # get_config stores any other initialiser as a dict, which a set
+        # membership test would try to hash, so compare with == instead.
+        if kernel_initializer == "complex":
             self.kernel_initializer = kernel_initializer
         else:
-            self.kernel_initializer = initializers.get(kernel_initializer)
-        self.bias_initializer = initializers.get(bias_initializer)
+            self.kernel_initializer = get_initializer(kernel_initializer)
+        self.bias_initializer = get_initializer(bias_initializer)
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.bias_regularizer = regularizers.get(bias_regularizer)
         self.activity_regularizer = regularizers.get(activity_regularizer)
@@ -133,7 +143,7 @@ class ComplexDense(Layer):
         def init_w_imag(shape, dtype=None):
             return rng.normal(size=kernel_shape, loc=0, scale=s)  # .astype(dtype)
 
-        if self.kernel_initializer in {"complex"}:
+        if self.kernel_initializer == "complex":
             real_init = init_w_real
             imag_init = init_w_imag
         else:
@@ -202,7 +212,7 @@ class ComplexDense(Layer):
         return tuple(output_shape)
 
     def get_config(self):
-        if self.kernel_initializer in {"complex"}:
+        if self.kernel_initializer == "complex":
             ki = self.kernel_initializer
         else:
             ki = initializers.serialize(self.kernel_initializer)

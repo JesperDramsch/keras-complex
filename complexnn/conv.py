@@ -9,14 +9,31 @@ from tensorflow.keras.layers import (
     InputSpec,
     Layer,
 )
-from tensorflow.python.keras.layers.convolutional import Conv
-from tensorflow.python.keras.utils import conv_utils
+from tensorflow.keras.utils import register_keras_serializable
 
+from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
-from .fft import fft, fft2, ifft, ifft2
 from .init import ComplexIndependentFilters, ComplexInit
-from .utils import _check_complex_axis
+from .utils import _check_complex_axis, _ignore_input_shape_warning, get_initializer
+
+# WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
+# private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
+# rebuild on the public Layer class; until then this is the one private import.
+# TensorFlow may drop the private copy, so `import complexnn` must not depend on
+# it: without it, only building a WeightNorm_Conv fails.
+try:
+    from tensorflow.python.keras.layers.convolutional import Conv
+except ImportError:
+
+    class Conv:
+        """Stand-in base class that makes building a WeightNorm_Conv fail"""
+
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "WeightNorm_Conv needs tensorflow.python.keras, TensorFlow's "
+                "private copy of Keras 2, which this TensorFlow does not provide."
+            )
 
 
 def conv1d_transpose(
@@ -165,21 +182,23 @@ def sanitizedInitGet(init):
     elif init in ["complex", "complex_independent", "glorot_complex", "he_complex"]:
         return init
     else:
-        return initializers.get(init)
+        return get_initializer(init)
 
 
 def sanitizedInitSer(init):
     """sanitizedInitSer"""
     if init in [sqrt_init]:
         return "sqrt_init"
-    elif init == "complex" or isinstance(init, ComplexInit):
-        return "complex"
-    elif init == "complex_independent" or isinstance(init, ComplexIndependentFilters):
-        return "complex_independent"
+    elif init in ["complex", "complex_independent"]:
+        # Only these names stand for the initialisers that build() creates. An
+        # instance carries its own criterion and seed and is registered, so it
+        # goes through initializers.serialize like any other initialiser.
+        return init
     else:
         return initializers.serialize(init)
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv(Layer):
     """Abstract nD complex convolution layer.
 
@@ -278,7 +297,8 @@ class ComplexConv(Layer):
         epsilon=1e-7,
         **kwargs,
     ):
-        super(ComplexConv, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(ComplexConv, self).__init__(**kwargs)
         self.rank = rank
         self.filters = filters
         self.kernel_size = conv_utils.normalize_tuple(kernel_size, rank, "kernel_size")
@@ -430,11 +450,6 @@ class ComplexConv(Layer):
         self.built = True
 
     def call(self, inputs):
-        if self.data_format == "channels_first":
-            channel_axis = 1
-        else:
-            channel_axis = -1
-        input_dim = K.shape(inputs)[channel_axis] // 2
         if False and self.transposed:
             if self.rank == 1:
                 f_real = self.kernel[:, : self.filters, :]
@@ -552,24 +567,11 @@ class ComplexConv(Layer):
 
         # Performing complex convolution
 
-        f_real._keras_shape = self.kernel_shape
-        f_imag._keras_shape = self.kernel_shape
-
         cat_kernels_4_real = K.concatenate([f_real, -f_imag], axis=-2)
         cat_kernels_4_imag = K.concatenate([f_imag, f_real], axis=-2)
         cat_kernels_4_complex = K.concatenate(
             [cat_kernels_4_real, cat_kernels_4_imag], axis=-1
         )
-        if False and self.transposed:
-            cat_kernels_4_complex._keras_shape = self.kernel_size + (
-                2 * self.filters,
-                2 * input_dim,
-            )
-        else:
-            cat_kernels_4_complex._keras_shape = (
-                self.kernel_size + 2 * input_dim,
-                2 * self.filters,
-            )
 
         output = convFunc(inputs, cat_kernels_4_complex, **convArgs)
 
@@ -643,11 +645,13 @@ class ComplexConv(Layer):
             "init_criterion": self.init_criterion,
             "spectral_parametrization": self.spectral_parametrization,
             "transposed": self.transposed,
+            "epsilon": self.epsilon,
         }
         base_config = super(ComplexConv, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv1D(ComplexConv):
     """1D complex convolution layer.
     This layer creates a complex convolution kernel that is convolved
@@ -782,9 +786,12 @@ class ComplexConv1D(ComplexConv):
     def get_config(self):
         config = super(ComplexConv1D, self).get_config()
         config.pop("rank")
+        # __init__ always passes data_format="channels_last" to ComplexConv.
+        config.pop("data_format")
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv2D(ComplexConv):
     """2D Complex convolution layer (e.g. spatial convolution over images).
     This layer creates a complex convolution kernel that is convolved
@@ -938,6 +945,7 @@ class ComplexConv2D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv3D(ComplexConv):
     """3D convolution layer (e.g. spatial convolution over volumes).
     This layer creates a complex convolution kernel that is convolved
@@ -1094,6 +1102,7 @@ class ComplexConv3D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class WeightNorm_Conv(Conv):
     """WeightNorm_Conv"""
 
@@ -1165,7 +1174,6 @@ class WeightNorm_Conv(Conv):
             * normalized_weight
         )
         shaped_kernel = K.reshape(normalized_weight, ker_shape)
-        shaped_kernel._keras_shape = ker_shape
 
         convArgs = {
             "strides": self.strides[0] if self.rank == 1 else self.strides,

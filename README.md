@@ -55,6 +55,19 @@ The layers take complex data as real tensors, with the real and imaginary parts 
 
 An example working implementation of an autoencoder can be found [here](https://github.com/JesperDramsch/Complex-CNN-Seismic/).
 
+Saving and loading
+------------------
+
+Models with complexnn layers save to the `.keras` format and load again without `custom_objects`. The layers are registered with Keras when `complexnn` is imported, so import it before loading:
+
+```
+import complexnn
+import tensorflow as tf
+
+model.save("model.keras")
+model = tf.keras.models.load_model("model.keras")
+```
+
 Complex Format of Tensors
 -------------------------
 
