@@ -92,7 +92,10 @@ class TestOutputLengths(unittest.TestCase):
             for kernel in (1, 2, 3, 4)
             for padding in ("valid", "same")
             for stride in (1, 2, 3)
-            for output_padding in (None, *range(stride))
+            # Keras 3.3 rejects output_padding=0 in Conv1DTranspose, so the
+            # Keras reference only sees values every supported release accepts.
+            # test_zero_output_padding covers 0 with hand-computed lengths.
+            for output_padding in (None, *range(1, stride))
         ]
         for length, kernel, padding, stride, output_padding in cases:
             with self.subTest(
@@ -118,6 +121,18 @@ class TestOutputLengths(unittest.TestCase):
                     stride=stride,
                 )
                 self.assertEqual(calc, expected)
+
+    def test_zero_output_padding(self):
+        # (length - 1) * stride + kernel - 2 * pad + output_padding, where pad is
+        # 0 for "valid" and kernel // 2 for "same".
+        self.assertEqual(
+            conv_utils.deconv_output_length(5, 3, "valid", output_padding=0, stride=2),
+            11,
+        )
+        self.assertEqual(
+            conv_utils.deconv_output_length(5, 3, "same", output_padding=0, stride=2),
+            9,
+        )
 
     def test_full_padding(self):
         self.assertEqual(conv_utils.conv_output_length(5, 3, "full", 1), 7)
