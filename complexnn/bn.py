@@ -10,6 +10,9 @@ import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.keras.utils import register_keras_serializable
+
+from .utils import get_initializer
 
 from .utils import _ignore_input_shape_warning
 
@@ -23,7 +26,7 @@ def sanitizedInitGet(init):
     if init in ["sqrt_init"]:
         return sqrt_init
     else:
-        return initializers.get(init)
+        return get_initializer(init)
 
 
 def sanitizedInitSer(init):
@@ -256,6 +259,7 @@ def ComplexBN(
             return input_centred
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexBatchNormalization(Layer):
     """Complex version of the real domain
     Batch normalization layer (Ioffe and Szegedy, 2014).
@@ -531,6 +535,11 @@ class ComplexBatchNormalization(Layer):
             self.center,
             axis=self.axis,
         )
+
+    def compute_output_shape(self, input_shape):
+        # Normalisation keeps the shape. Defining it lets Keras 3 skip
+        # tracing call() to infer the output shape.
+        return input_shape
 
     def get_config(self):
         config = {

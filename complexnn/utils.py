@@ -8,7 +8,9 @@ import warnings
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
+from tensorflow.keras import initializers
 from tensorflow.keras.layers import Layer
+from tensorflow.keras.utils import get_registered_object, register_keras_serializable
 
 # Keras 3 warns whenever a layer receives `input_shape` or `input_dim` and
 # recommends `keras.Input(shape)` instead. The complex layers keep accepting
@@ -47,6 +49,25 @@ def _ignore_input_shape_warning(kwargs):
             "ignore", message=_INPUT_SHAPE_WARNING, category=UserWarning
         )
         yield
+
+
+def get_initializer(identifier):
+    """Resolve an initialiser like ``initializers.get``, complexnn ones included.
+
+    The legacy .h5 loader looks a serialised initialiser up by its bare class
+    name, while complexnn registers its classes as ``complexnn>ClassName``, so
+    a ``ComplexInit`` saved with its config would not load. When Keras cannot
+    resolve such a config, look it up by its registered name instead.
+    """
+    try:
+        return initializers.get(identifier)
+    except (ValueError, TypeError):
+        if isinstance(identifier, dict):
+            registered = str(identifier.get("registered_name") or "")
+            cls = get_registered_object(registered) if registered else None
+            if cls is not None and registered.startswith("complexnn>"):
+                return cls.from_config(identifier.get("config") or {})
+        raise
 
 
 #
@@ -152,6 +173,7 @@ def _compute_fans(shape, data_format="channels_last"):
     return fan_in, fan_out
 
 
+@register_keras_serializable(package="complexnn")
 class GetReal(Layer):
     def call(self, inputs):
         return get_realpart(inputs)
@@ -160,6 +182,7 @@ class GetReal(Layer):
         return getpart_output_shape(input_shape)
 
 
+@register_keras_serializable(package="complexnn")
 class GetImag(Layer):
     def call(self, inputs):
         return get_imagpart(inputs)
@@ -168,6 +191,7 @@ class GetImag(Layer):
         return getpart_output_shape(input_shape)
 
 
+@register_keras_serializable(package="complexnn")
 class GetAbs(Layer):
     def call(self, inputs):
         return get_abs(inputs)

@@ -9,12 +9,13 @@ from tensorflow.keras.layers import (
     InputSpec,
     Layer,
 )
+from tensorflow.keras.utils import register_keras_serializable
 
 from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .init import ComplexIndependentFilters, ComplexInit
-from .utils import _ignore_input_shape_warning
+from .utils import _ignore_input_shape_warning, get_initializer
 
 # WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
 # private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
@@ -181,21 +182,23 @@ def sanitizedInitGet(init):
     elif init in ["complex", "complex_independent", "glorot_complex", "he_complex"]:
         return init
     else:
-        return initializers.get(init)
+        return get_initializer(init)
 
 
 def sanitizedInitSer(init):
     """sanitizedInitSer"""
     if init in [sqrt_init]:
         return "sqrt_init"
-    elif init == "complex" or isinstance(init, ComplexInit):
-        return "complex"
-    elif init == "complex_independent" or isinstance(init, ComplexIndependentFilters):
-        return "complex_independent"
+    elif init in ["complex", "complex_independent"]:
+        # Only these names stand for the initialisers that build() creates. An
+        # instance carries its own criterion and seed and is registered, so it
+        # goes through initializers.serialize like any other initialiser.
+        return init
     else:
         return initializers.serialize(init)
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv(Layer):
     """Abstract nD complex convolution layer.
 
@@ -635,11 +638,13 @@ class ComplexConv(Layer):
             "init_criterion": self.init_criterion,
             "spectral_parametrization": self.spectral_parametrization,
             "transposed": self.transposed,
+            "epsilon": self.epsilon,
         }
         base_config = super(ComplexConv, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv1D(ComplexConv):
     """1D complex convolution layer.
     This layer creates a complex convolution kernel that is convolved
@@ -768,9 +773,12 @@ class ComplexConv1D(ComplexConv):
     def get_config(self):
         config = super(ComplexConv1D, self).get_config()
         config.pop("rank")
+        # __init__ always passes data_format="channels_last" to ComplexConv.
+        config.pop("data_format")
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv2D(ComplexConv):
     """2D Complex convolution layer (e.g. spatial convolution over images).
     This layer creates a complex convolution kernel that is convolved
@@ -918,6 +926,7 @@ class ComplexConv2D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv3D(ComplexConv):
     """3D convolution layer (e.g. spatial convolution over volumes).
     This layer creates a complex convolution kernel that is convolved
@@ -1069,6 +1078,7 @@ class ComplexConv3D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class WeightNorm_Conv(Conv):
     """WeightNorm_Conv"""
 

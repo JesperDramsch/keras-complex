@@ -7,9 +7,10 @@
 import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.keras.utils import register_keras_serializable
 
 from .bn import ComplexBN as complex_normalization
-from .bn import sqrt_init
+from .bn import sanitizedInitGet, sanitizedInitSer, sqrt_init
 from .utils import _ignore_input_shape_warning
 
 
@@ -45,6 +46,7 @@ def layernorm(x, axis, epsilon, gamma, beta):
     return x_LN
 
 
+@register_keras_serializable(package="complexnn")
 class LayerNormalization(Layer):
     def __init__(
         self,
@@ -96,17 +98,16 @@ class LayerNormalization(Layer):
         config = {
             "epsilon": self.epsilon,
             "axis": self.axis,
-            "gamma_regularizer": self.gamma_regularizer.get_config()
-            if self.gamma_regularizer
-            else None,
-            "beta_regularizer": self.beta_regularizer.get_config()
-            if self.beta_regularizer
-            else None,
+            "beta_init": initializers.serialize(self.beta_init),
+            "gamma_init": initializers.serialize(self.gamma_init),
+            "gamma_regularizer": regularizers.serialize(self.gamma_regularizer),
+            "beta_regularizer": regularizers.serialize(self.beta_regularizer),
         }
         base_config = super(LayerNormalization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexLayerNorm(Layer):
     def __init__(
         self,
@@ -130,9 +131,11 @@ class ComplexLayerNorm(Layer):
         self.axis = axis
         self.center = center
         self.scale = scale
-        self.beta_initializer = initializers.get(beta_initializer)
-        self.gamma_diag_initializer = initializers.get(gamma_diag_initializer)
-        self.gamma_off_initializer = initializers.get(gamma_off_initializer)
+        # sanitizedInitGet also accepts "sqrt_init", the name under which
+        # get_config stores the default gamma_diag_initializer.
+        self.beta_initializer = sanitizedInitGet(beta_initializer)
+        self.gamma_diag_initializer = sanitizedInitGet(gamma_diag_initializer)
+        self.gamma_off_initializer = sanitizedInitGet(gamma_off_initializer)
         self.beta_regularizer = regularizers.get(beta_regularizer)
         self.gamma_diag_regularizer = regularizers.get(gamma_diag_regularizer)
         self.gamma_off_regularizer = regularizers.get(gamma_off_regularizer)
@@ -268,17 +271,20 @@ class ComplexLayerNorm(Layer):
             axis=self.axis,
         )
 
+    def compute_output_shape(self, input_shape):
+        # Normalisation keeps the shape. Defining it lets Keras 3 skip
+        # tracing call() to infer the output shape.
+        return input_shape
+
     def get_config(self):
         config = {
             "axis": self.axis,
             "epsilon": self.epsilon,
             "center": self.center,
             "scale": self.scale,
-            "beta_initializer": initializers.serialize(self.beta_initializer),
-            "gamma_diag_initializer": initializers.serialize(
-                self.gamma_diag_initializer
-            ),
-            "gamma_off_initializer": initializers.serialize(self.gamma_off_initializer),
+            "beta_initializer": sanitizedInitSer(self.beta_initializer),
+            "gamma_diag_initializer": sanitizedInitSer(self.gamma_diag_initializer),
+            "gamma_off_initializer": sanitizedInitSer(self.gamma_off_initializer),
             "beta_regularizer": regularizers.serialize(self.beta_regularizer),
             "gamma_diag_regularizer": regularizers.serialize(
                 self.gamma_diag_regularizer

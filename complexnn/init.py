@@ -5,10 +5,12 @@ import numpy as np
 import tensorflow.keras.backend as K
 from numpy.random import RandomState
 from tensorflow.keras.initializers import Initializer
+from tensorflow.keras.utils import register_keras_serializable
 
 from .utils import _compute_fans
 
 
+@register_keras_serializable(package="complexnn")
 class IndependentFilters(Initializer):
     # This initialization constructs real-valued kernels
     # that are independent as much as possible from each other
@@ -103,6 +105,7 @@ class IndependentFilters(Initializer):
         }
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexIndependentFilters(Initializer):
     # This initialization constructs complex-valued kernels
     # that are independent as much as possible from each other
@@ -213,6 +216,7 @@ class ComplexIndependentFilters(Initializer):
         }
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexInit(Initializer):
     # The standard complex initialization using
     # either the He or the Glorot criterion.
@@ -277,7 +281,18 @@ class ComplexInit(Initializer):
 
         return weight
 
+    def get_config(self):
+        return {
+            "nb_filters": self.nb_filters,
+            "kernel_size": self.kernel_size,
+            "input_dim": self.input_dim,
+            "weight_dim": self.weight_dim,
+            "criterion": self.criterion,
+            "seed": self.seed,
+        }
 
+
+@register_keras_serializable(package="complexnn")
 class SqrtInit(Initializer):
     def __call__(self, shape, dtype=None):
         return K.constant(1 / K.sqrt(2), shape=shape, dtype=dtype)
