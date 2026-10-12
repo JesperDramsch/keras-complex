@@ -55,6 +55,17 @@ LAYERS = {
             2, 3, padding="same", normalize_weight=True, epsilon=1e-2
         ),
     ),
+    "ComplexConv2D ComplexInit": (
+        (6, 6, 4),
+        lambda: conn.ComplexConv2D(
+            2,
+            3,
+            padding="same",
+            kernel_initializer=conn.ComplexInit(
+                kernel_size=(3, 3), input_dim=2, weight_dim=2, nb_filters=2, seed=5
+            ),
+        ),
+    ),
     "ComplexConv2D transposed": (
         (6, 6, 4),
         lambda: conn.ComplexConv2D(1, 3, strides=2, padding="same", transposed=True),

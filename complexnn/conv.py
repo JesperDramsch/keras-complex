@@ -172,10 +172,11 @@ def sanitizedInitSer(init):
     """sanitizedInitSer"""
     if init in [sqrt_init]:
         return "sqrt_init"
-    elif init == "complex" or isinstance(init, ComplexInit):
-        return "complex"
-    elif init == "complex_independent" or isinstance(init, ComplexIndependentFilters):
-        return "complex_independent"
+    elif init in ["complex", "complex_independent"]:
+        # Only these names stand for the initialisers that build() creates. An
+        # instance carries its own criterion and seed and is registered, so it
+        # goes through initializers.serialize like any other initialiser.
+        return init
     else:
         return initializers.serialize(init)
 
