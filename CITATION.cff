@@ -3,7 +3,7 @@ message: 'Please cite the following works when using this software.'
 authors:
 - family-names: 'Dramsch'
   given-names: 'Jesper Sören'
-  orcid: '0000-0001-8273-905X'
+  orcid: 'https://orcid.org/0000-0001-8273-905X'
 doi: '10.6084/m9.figshare.9783773'
 identifiers:
   - type: 'doi'
@@ -12,32 +12,37 @@ identifiers:
     value: 'https://figshare.com/articles/Complex-Valued_Neural_Networks_in_Keras_with_Tensorflow/9783773/1'
 title: 'Complex-Valued Neural Networks in Keras with Tensorflow'
 url: 'https://figshare.com/articles/Complex-Valued_Neural_Networks_in_Keras_with_Tensorflow/9783773/1'
-date-published: 2019-01-01
-year: 2019
-publisher:
-  name: 'figshare'
+repository-code: 'https://github.com/JesperDramsch/keras-complex'
+license: 'MIT'
 type: 'software'
 preferred-citation:
+  type: 'article'
   abstract: 'Deep learning has become an area of interest in most scientific areas, including physical sciences. Modern networks apply real-valued transformations on the data. Particularly, convolutions in convolutional neural networks discard phase information entirely. Many deterministic signals, such as seismic data or electrical signals, contain significant information in the phase of the signal. We explore complex-valued deep convolutional networks to leverage non-linear feature maps. Seismic data commonly has a lowcut filter applied, to attenuate noise from ocean waves and similar long wavelength contributions. In non-stationary data, the phase content can stabilize training and improve the generalizability of neural networks. While it has been shown that phase content can be restored in deep neural networks, we show how including phase information in feature maps improves both training and inference from deterministic physical data. Furthermore, we show that smaller complex networks outperform larger real-valued networks.'
   authors:
   - family-names: 'Dramsch'
     given-names: 'Jesper Sören'
-    orcid: '0000-0001-8273-905X'
+    orcid: 'https://orcid.org/0000-0001-8273-905X'
   - family-names: 'Lüthje'
     given-names: 'Mikael'
-    orcid: "0000-0003-2715-1653"
+    orcid: 'https://orcid.org/0000-0003-2715-1653'
   - family-names: 'Christensen'
     given-names: 'Anders Nymark'
-    orcid: "0000-0002-3668-3128"
-  doi: 'https://doi.org/10.1016/j.cageo.2020.104643'
+    orcid: 'https://orcid.org/0000-0002-3668-3128'
+  title: 'Complex-valued neural networks for machine learning on non-stationary physical data'
+  journal: 'Computers & Geosciences'
+  volume: 146
+  start: 104643
+  year: 2021
+  month: 1
+  publisher:
+    name: 'Elsevier BV'
+  issn: '0098-3004'
+  doi: '10.1016/j.cageo.2020.104643'
   identifiers:
     - type: 'doi'
-      value: 'https://doi.org/10.1016/j.cageo.2020.104643'
+      value: '10.1016/j.cageo.2020.104643'
     - type: 'url'
       value: 'https://www.sciencedirect.com/science/article/pii/S0098300420306208'
-    - type: 'other'
-      value: 'urn:issn:0098-3004'
-  title: 'Complex-valued neural networks for machine learning on non-stationary physical data'
   url: 'https://www.sciencedirect.com/science/article/pii/S0098300420306208'
 references:
   - authors:
