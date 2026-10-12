@@ -10,7 +10,7 @@ from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
 
 from .bn import ComplexBN as complex_normalization
-from .bn import sqrt_init
+from .bn import sanitizedInitGet, sanitizedInitSer, sqrt_init
 
 
 def layernorm(x, axis, epsilon, gamma, beta):
@@ -129,9 +129,11 @@ class ComplexLayerNorm(Layer):
         self.axis = axis
         self.center = center
         self.scale = scale
-        self.beta_initializer = initializers.get(beta_initializer)
-        self.gamma_diag_initializer = initializers.get(gamma_diag_initializer)
-        self.gamma_off_initializer = initializers.get(gamma_off_initializer)
+        # sanitizedInitGet also accepts "sqrt_init", the name under which
+        # get_config stores the default gamma_diag_initializer.
+        self.beta_initializer = sanitizedInitGet(beta_initializer)
+        self.gamma_diag_initializer = sanitizedInitGet(gamma_diag_initializer)
+        self.gamma_off_initializer = sanitizedInitGet(gamma_off_initializer)
         self.beta_regularizer = regularizers.get(beta_regularizer)
         self.gamma_diag_regularizer = regularizers.get(gamma_diag_regularizer)
         self.gamma_off_regularizer = regularizers.get(gamma_off_regularizer)
@@ -272,11 +274,9 @@ class ComplexLayerNorm(Layer):
             "epsilon": self.epsilon,
             "center": self.center,
             "scale": self.scale,
-            "beta_initializer": initializers.serialize(self.beta_initializer),
-            "gamma_diag_initializer": initializers.serialize(
-                self.gamma_diag_initializer
-            ),
-            "gamma_off_initializer": initializers.serialize(self.gamma_off_initializer),
+            "beta_initializer": sanitizedInitSer(self.beta_initializer),
+            "gamma_diag_initializer": sanitizedInitSer(self.gamma_diag_initializer),
+            "gamma_off_initializer": sanitizedInitSer(self.gamma_off_initializer),
             "beta_regularizer": regularizers.serialize(self.beta_regularizer),
             "gamma_diag_regularizer": regularizers.serialize(
                 self.gamma_diag_regularizer
