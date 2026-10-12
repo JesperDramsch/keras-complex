@@ -1,13 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Modified for keras-complex; the module docstring lists the changes.
+
 """Argument and shape helpers for the convolution layers.
 
 keras-complex used to import these from ``tensorflow.python.keras.utils``, a
 private copy of Keras 2 inside TensorFlow. Neither Keras 2 nor Keras 3 makes
-them public, so the package keeps its own copy. They follow TensorFlow's
-functions (Copyright 2015 The TensorFlow Authors, Apache License 2.0) with two
-changes: invalid padding raises ValueError instead of failing an assert, and
+them public, so the package keeps its own copy. They are derived from
+TensorFlow's functions and stay under the Apache License 2.0 (see the header
+above, LICENSE.md and LICENSE-APACHE), with two changes: invalid padding
+raises ValueError instead of failing an assert, and
 ``normalize_data_format`` reads the image data format from the public Keras
 backend, so it follows ``tf.keras.backend.set_image_data_format``.
 """
