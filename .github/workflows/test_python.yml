@@ -16,6 +16,27 @@ jobs:
       # Stop on syntax errors and undefined names only.
       - run: uvx flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
+  # 0.2.3 shipped invalid metadata that pip 24.1 and later refuse to install.
+  # Build the package and install it the way users do before any release.
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.12"
+          activate-environment: true
+      - run: uv build
+      - name: Check metadata
+        run: uvx twine check --strict dist/*
+      - name: Install the wheel with current pip
+        run: |
+          uv pip install "pip>=24.1"
+          python -m pip install dist/*.whl
+          python -c "import complexnn"
+
   test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
