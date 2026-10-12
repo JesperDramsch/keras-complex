@@ -118,35 +118,75 @@ def get_abs(x):
     return K.sqrt(real * real + imag * imag)
 
 
+def _complex_part_axis(ndim):
+    """Axis that `get_realpart` and `get_imagpart` split for a rank `ndim` input."""
+    if (K.image_data_format() == "channels_first" and ndim != 3) or ndim == 2:
+        return 1
+    return -1
+
+
 def getpart_output_shape(input_shape):
     returned_shape = list(input_shape[:])
-    image_format = K.image_data_format()
-    ndim = len(returned_shape)
-
-    if (image_format == "channels_first" and ndim != 3) or ndim == 2:
-        axis = 1
-    else:
-        axis = -1
+    axis = _complex_part_axis(len(returned_shape))
 
     returned_shape[axis] = returned_shape[axis] // 2
 
     return tuple(returned_shape)
 
 
+def _check_complex_axis(layer, input_shape, axis, hint=""):
+    """Check that an axis of the input can hold real and imaginary parts.
+
+    The layers store complex values as real tensors: along one axis, usually
+    the channel axis, the first half holds the real parts and the second half
+    the imaginary parts. That axis must therefore have an even size of at
+    least 2.
+
+    Arguments:
+        layer: The layer doing the check, named in the error message.
+        input_shape: Shape of the layer input, including the batch axis.
+        axis: Integer, the axis that holds the real and imaginary parts.
+        hint: Optional sentence added to the end of the error message.
+
+    Raises:
+        ValueError: If the size of `axis` is undefined, odd or smaller than 2.
+    """
+    shape = tuple(input_shape)
+    size = shape[axis]
+    if size is not None and size >= 2 and size % 2 == 0:
+        return
+    if size is None:
+        received = f"the size of axis {axis} is not defined"
+    else:
+        received = f"axis {axis} has size {size}"
+    message = (
+        f"{type(layer).__name__} expects the real and imaginary parts of its "
+        f"input stacked along axis {axis}: the first half of that axis holds "
+        "the real parts and the second half the imaginary parts, so its size "
+        f"must be even and at least 2. Received an input with shape {shape}, "
+        f"where {received}."
+    )
+    if hint:
+        message = f"{message} {hint}"
+    raise ValueError(message)
+
+
 # _compute_fans is different in keras-2 keras.initializers and tensorflow.python.ops.init_ops
 # this is the implementation copied from keras-2:
 def _compute_fans(shape, data_format="channels_last"):
     """Computes the number of input and output units for a weight shape.
-    # Arguments
 
+    Arguments:
         shape: Integer shape tuple.
         data_format: Image data format to use for convolution kernels.
             Note that all kernels in Keras are standardized on the
             `channels_last` ordering (even when inputs are set
             to `channels_first`).
-    # Returns
+
+    Returns:
         A tuple of scalars, `(fan_in, fan_out)`.
-    # Raises
+
+    Raises:
         ValueError: in case of invalid `data_format` argument.
     """
     if len(shape) == 2:
@@ -173,28 +213,53 @@ def _compute_fans(shape, data_format="channels_last"):
     return fan_in, fan_out
 
 
-@register_keras_serializable(package="complexnn")
-class GetReal(Layer):
+def _check_part_shape(layer, input_shape):
+    """Check the axis that `get_realpart` and `get_imagpart` split, if known."""
+    shape = tuple(input_shape)
+    axis = _complex_part_axis(len(shape))
+    # An undefined size is split from the dynamic shape in `call`, which
+    # works on Keras 2, so only check sizes that are known here.
+    if shape[axis] is not None:
+        _check_complex_axis(layer, shape, axis)
+
+
+class _ComplexPart(Layer):
+    """Base class for the layers that split their input into its two parts.
+
+    These layers have no weights and accept inputs of any width and rank, so
+    one instance can be called on several tensors. Keras only builds a layer
+    on its first call, so the layout is also checked in `call`, which covers
+    eager tensors and symbolic tensors on Keras 2, and in
+    `compute_output_shape`, which Keras 3 uses for symbolic tensors instead
+    of tracing `call`.
+    """
+
+    def build(self, input_shape):
+        _check_part_shape(self, input_shape)
+        super(_ComplexPart, self).build(input_shape)
+
     def call(self, inputs):
+        _check_part_shape(self, inputs.shape)
+        return self._split(inputs)
+
+    def compute_output_shape(self, input_shape):
+        _check_part_shape(self, input_shape)
+        return getpart_output_shape(input_shape)
+
+
+@register_keras_serializable(package="complexnn")
+class GetReal(_ComplexPart):
+    def _split(self, inputs):
         return get_realpart(inputs)
 
-    def compute_output_shape(self, input_shape):
-        return getpart_output_shape(input_shape)
-
 
 @register_keras_serializable(package="complexnn")
-class GetImag(Layer):
-    def call(self, inputs):
+class GetImag(_ComplexPart):
+    def _split(self, inputs):
         return get_imagpart(inputs)
 
-    def compute_output_shape(self, input_shape):
-        return getpart_output_shape(input_shape)
-
 
 @register_keras_serializable(package="complexnn")
-class GetAbs(Layer):
-    def call(self, inputs):
+class GetAbs(_ComplexPart):
+    def _split(self, inputs):
         return get_abs(inputs)
-
-    def compute_output_shape(self, input_shape):
-        return getpart_output_shape(input_shape)

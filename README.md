@@ -51,6 +51,8 @@ model.compile(optimizer=optimizers.Adam(), loss='mse')
 
 ```
 
+The layers take complex data as real tensors, with the real and imaginary parts stacked along the channel axis: the first half of the channels holds the real parts and the second half the imaginary parts. `input_shape=(28, 28, 2)` above is therefore a 28x28 image with one complex channel. The channel axis must have an even size of at least 2, and the layers raise a `ValueError` when it does not. [Complex Format of Tensors](#complex-format-of-tensors) below has the details.
+
 An example working implementation of an autoencoder can be found [here](https://github.com/JesperDramsch/Complex-CNN-Seismic/).
 
 Saving and loading
@@ -69,20 +71,23 @@ model = tf.keras.models.load_model("model.keras")
 Complex Format of Tensors
 -------------------------
 
-This library assumes that complex values are split into two real-valued parts. The real-valued and complex-valued complement, also seen [in the Docs](https://keras-complex.readthedocs.io/math.html).
+This library stores each complex value as two real values, its real part and its imaginary part. The two parts are stacked along the channel axis, all real parts first:
 
-The tensors for a 2D complex tensor of 3x3, the look like:
+- along the last axis with `data_format="channels_last"`, the default;
+- along axis 1 with `data_format="channels_first"`.
 
+For a batch of 3x3 images with two complex channels `z0` and `z1`, the input has the shape `(batch, 3, 3, 4)`, and its channels hold `[Re z0, Re z1, Im z0, Im z1]` in this order. The parts are not interleaved.
+
+To turn a complex NumPy array into this format:
+
+```python
+import numpy as np
+
+z = np.random.randn(8, 3, 3, 2) + 1j * np.random.randn(8, 3, 3, 2)  # two complex channels
+x = np.concatenate([z.real, z.imag], axis=-1)  # shape (8, 3, 3, 4)
 ```
-[[[r r r],
-  [r r r],
-  [r r r]],
-  [i,i,i],
-  [i,i,i],
-  [i,i,i]]]
-```
 
-So multiple samples should then be arranged into `[r,r,r,i,i,i]`, which is also documented [in the Docs](https://keras-complex.readthedocs.io/math.html#implementation).
+The complex layers return their outputs in the same format: `ComplexConv2D(filters=f)` returns `2 * f` channels, the real parts first. `complexnn.GetReal`, `complexnn.GetImag` and `complexnn.GetAbs` split such a tensor into its real parts, imaginary parts and magnitudes. The [data layout page in the docs](https://keras-complex.readthedocs.io/layout.html) lists the axis each layer uses, and the [math page](https://keras-complex.readthedocs.io/math.html#implementation) shows how the complex convolution is computed.
 
 Citation
 --------

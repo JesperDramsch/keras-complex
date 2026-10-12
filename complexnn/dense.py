@@ -8,7 +8,12 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
 from tensorflow.keras.utils import register_keras_serializable
 
-from .utils import _compute_fans, _ignore_input_shape_warning, get_initializer
+from .utils import (
+    _check_complex_axis,
+    _compute_fans,
+    _ignore_input_shape_warning,
+    get_initializer,
+)
 
 
 @register_keras_serializable(package="complexnn")
@@ -24,7 +29,8 @@ class ComplexDense(Layer):
     (only applicable if `use_bias` is `True`).
     Note: if the input to the layer has a rank greater than 2, then
     AN ERROR MESSAGE IS PRINTED.
-    # Arguments
+
+    Arguments:
         units: Positive integer, dimensionality of each of the real part
             and the imaginary part. It is actualy the number of complex units.
         activation: Activation function to use
@@ -50,11 +56,16 @@ class ComplexDense(Layer):
             (see keras.constraints).
         bias_constraint: Constraint function applied to the bias vector
             (see keras.constraints).
-    # Input shape
-        a 2D input with shape `(batch_size, input_dim)`.
-    # Output shape
+
+    Input shape:
+        a 2D input with shape `(batch_size, input_dim)`. The first half of
+        `input_dim` holds the real parts and the second half the imaginary
+        parts, so `input_dim` must be even.
+
+    Output shape:
         For a 2D input with shape `(batch_size, input_dim)`,
-        the output would have shape `(batch_size, units)`.
+        the output would have shape `(batch_size, 2 x units)`,
+        with the real parts in the first `units` features.
     """
 
     def __init__(
@@ -102,7 +113,7 @@ class ComplexDense(Layer):
 
     def build(self, input_shape):
         assert len(input_shape) == 2
-        assert input_shape[-1] % 2 == 0
+        _check_complex_axis(self, input_shape, -1)
         input_dim = input_shape[-1] // 2
         data_format = K.image_data_format()
         kernel_shape = (input_dim, self.units)

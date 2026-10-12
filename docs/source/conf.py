@@ -30,9 +30,18 @@ author = "Jesper Dramsch, Chiheb Trabelsi, Olexa Bilaniuk, Bruce Sharpe, Ying Zh
 extensions = [
     "sphinxcontrib.apidoc",
     "sphinx.ext.autodoc",
-    "recommonmark",
+    "sphinx.ext.napoleon",
+    "myst_parser",
     "sphinxcontrib.bibtex",
 ]
+
+# The docstrings use Google style sections, plus these Keras ones.
+napoleon_custom_sections = ["Input shape", "Output shape"]
+
+# Methods without a docstring would otherwise show the docstring of the
+# Keras base class. That text changes with the installed Keras version, and
+# the one WeightNorm_Conv.call inherits is not valid reStructuredText.
+autodoc_inherit_docstrings = False
 
 master_doc = "index"  # Needed by RTD
 
@@ -56,11 +65,6 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
 
 # Bibtex configuration
 bibtex_bibfiles = ["bib.bib"]

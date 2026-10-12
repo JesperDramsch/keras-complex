@@ -16,6 +16,8 @@ from .utils import get_initializer
 
 from .utils import _ignore_input_shape_warning
 
+from .utils import _check_complex_axis
+
 
 def sqrt_init(shape, dtype=None):
     value = (1 / np.sqrt(2)) * K.ones(shape)
@@ -268,12 +270,16 @@ class ComplexBatchNormalization(Layer):
     close to the null vector, the 2 by 2 covariance matrix of a complex unit close to identity
     and the 2 by 2 relation matrix, also called pseudo-covariance, close to the
     null matrix.
-    # Arguments
+
+    Arguments:
         axis: Integer, the axis that should be normalized
-            (typically the features axis).
+            (typically the features axis). It holds the real parts
+            followed by the imaginary parts, so its size must be even.
             For instance, after a `Conv2D` layer with
             `data_format="channels_first"`,
-            set `axis=2` in `ComplexBatchNormalization`.
+            set `axis=1` in `ComplexBatchNormalization`.
+            Only `axis=-1` and, for inputs of rank 2, 4 or 5,
+            `axis=1` are supported.
         momentum: Momentum for the moving statistics related to the real and
             imaginary parts.
         epsilon: Small float added to each of the variances related to the
@@ -295,13 +301,16 @@ class ComplexBatchNormalization(Layer):
         gamma_regularizer: Optional regularizer for the gamma weights.
         beta_constraint: Optional constraint for the beta weights.
         gamma_constraint: Optional constraint for the gamma weights.
-    # Input shape
+
+    Input shape:
         Arbitrary. Use the keyword argument `input_shape`
         (tuple of integers, does not include the samples axis)
         when using this layer as the first layer in a model.
-    # Output shape
+
+    Output shape:
         Same shape as input.
-    # References
+
+    References:
         - [Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
     """
 
@@ -359,6 +368,13 @@ class ComplexBatchNormalization(Layer):
                 "input tensor should have a defined dimension "
                 "but the layer received an input with shape " + str(input_shape) + "."
             )
+        _check_complex_axis(
+            self,
+            input_shape,
+            self.axis,
+            hint="Use `axis=-1` when the parts are on the last axis, or `axis=1` "
+            "when they are on axis 1 of an input of rank 2, 4 or 5.",
+        )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 
         param_shape = (input_shape[self.axis] // 2,)

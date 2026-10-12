@@ -16,10 +16,12 @@ Contents
 
    Introduction <intro>
    Installation <install>
+   Data layout <layout>
    API <api/api_toc>
    Contributing <contrib>
    math
    cite
+   License <license>
 
 Indices and tables
 ==================

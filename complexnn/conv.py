@@ -15,7 +15,7 @@ from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .init import ComplexIndependentFilters, ComplexInit
-from .utils import _ignore_input_shape_warning, get_initializer
+from .utils import _check_complex_axis, _ignore_input_shape_warning, get_initializer
 
 # WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
 # private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
@@ -356,6 +356,13 @@ class ComplexConv(Layer):
             raise ValueError(
                 "The channel dimension of the inputs should be defined. Found `None`."
             )
+        _check_complex_axis(
+            self,
+            input_shape,
+            channel_axis,
+            hint=f"The channel axis is axis {channel_axis} because data_format "
+            f"is '{self.data_format}'.",
+        )
         # Divide by 2 for real and complex input.
         input_dim = input_shape[channel_axis] // 2
         if False and self.transposed:
@@ -658,9 +665,10 @@ class ComplexConv1D(ComplexConv):
     When using this layer as the first layer in a model,
     provide an `input_shape` argument
     (tuple of integers or `None`, e.g.
-    `(10, 128)` for sequences of 10 vectors of 128-dimensional vectors,
-    or `(None, 128)` for variable-length sequences of 128-dimensional vectors.
-    # Arguments
+    `(10, 128)` for sequences of 10 vectors of 64 complex values each,
+    or `(None, 128)` for variable-length sequences of such vectors.
+
+    Arguments:
         filters: Integer, the dimensionality of the output space, i.e,
             the number of complex feature maps. It is also the effective number
             of feature maps for each of the real and imaginary parts.
@@ -718,10 +726,15 @@ class ComplexConv1D(ComplexConv):
         spectral_parametrization: Whether or not to use a spectral
             parametrization of the parameters.
         transposed: Boolean, whether or not to use transposed convolution
-    # Input shape
-        3D tensor with shape: `(batch_size, steps, input_dim)`
-    # Output shape
-        3D tensor with shape: `(batch_size, new_steps, 2 x filters)`
+
+    Input shape:
+        3D tensor with shape: `(batch_size, steps, input_dim)`. The first
+        half of `input_dim` holds the real parts and the second half the
+        imaginary parts, so `input_dim` must be even.
+
+    Output shape:
+        3D tensor with shape: `(batch_size, new_steps, 2 x filters)`,
+        with the real parts in the first `filters` channels.
         `steps` value might have changed due to padding or strides.
     """
 
@@ -790,9 +803,10 @@ class ComplexConv2D(ComplexConv):
     When using this layer as the first layer in a model,
     provide the keyword argument `input_shape`
     (tuple of integers, does not include the sample axis),
-    e.g. `input_shape=(128, 128, 3)` for 128x128 RGB pictures
-    in `data_format="channels_last"`.
-    # Arguments
+    e.g. `input_shape=(128, 128, 6)` for 128x128 images with 3 complex
+    channels in `data_format="channels_last"`.
+
+    Arguments:
         filters: Integer, the dimensionality of the complex output space
             (i.e, the number complex feature maps in the convolution). The
             total effective number of filters or feature maps is 2 x filters.
@@ -860,18 +874,23 @@ class ComplexConv2D(ComplexConv):
         spectral_parametrization: Whether or not to use a spectral
             parametrization of the parameters.
         transposed: Boolean, whether or not to use transposed convolution
-    # Input shape
+
+    Input shape:
         4D tensor with shape:
         `(samples, channels, rows, cols)` if data_format='channels_first'
         or 4D tensor with shape:
         `(samples, rows, cols, channels)` if data_format='channels_last'.
-    # Output shape
+        `channels` holds the real parts of the complex channels followed by
+        their imaginary parts, so it must be even.
+
+    Output shape:
         4D tensor with shape:
         `(samples, 2 x filters, new_rows, new_cols)` if
         data_format='channels_first' or 4D tensor with shape:
         `(samples, new_rows, new_cols, 2 x filters)` if
         data_format='channels_last'. `rows` and `cols` values might have
-        changed due to padding.
+        changed due to padding. The first `filters` channels hold the real
+        parts and the last `filters` channels the imaginary parts.
     """
 
     def __init__(
@@ -938,10 +957,10 @@ class ComplexConv3D(ComplexConv):
     When using this layer as the first layer in a model,
     provide the keyword argument `input_shape`
     (tuple of integers, does not include the sample axis),
-    e.g. `input_shape=(2, 128, 128, 128, 3)` for 128x128x128 volumes
-    with 3 channels,
-    in `data_format="channels_last"`.
-    # Arguments
+    e.g. `input_shape=(128, 128, 128, 2)` for 128x128x128 volumes
+    with one complex channel, in `data_format="channels_last"`.
+
+    Arguments:
         filters: Integer, the dimensionality of the complex output space
             (i.e, the number complex feature maps in the convolution). The
             total effective number of filters or feature maps is 2 x filters.
@@ -1008,14 +1027,18 @@ class ComplexConv3D(ComplexConv):
         spectral_parametrization: Whether or not to use a spectral
             parametrization of the parameters.
         transposed: Boolean, whether or not to use transposed convolution
-    # Input shape
+
+    Input shape:
         5D tensor with shape:
         `(samples, channels, conv_dim1, conv_dim2, conv_dim3)` if
         data_format='channels_first'
         or 5D tensor with shape:
         `(samples, conv_dim1, conv_dim2, conv_dim3, channels)` if
         data_format='channels_last'.
-    # Output shape
+        `channels` holds the real parts of the complex channels followed by
+        their imaginary parts, so it must be even.
+
+    Output shape:
         5D tensor with shape:
         `(samples, 2 x filters, new_conv_dim1, new_conv_dim2, new_conv_dim3)`
         if data_format='channels_first'
@@ -1023,7 +1046,8 @@ class ComplexConv3D(ComplexConv):
         `(samples, new_conv_dim1, new_conv_dim2, new_conv_dim3, 2 x filters)`
         if data_format='channels_last'.
         `new_conv_dim1`, `new_conv_dim2` and `new_conv_dim3` values might have
-        changed due to padding.
+        changed due to padding. The first `filters` channels hold the real
+        parts and the last `filters` channels the imaginary parts.
     """
 
     def __init__(
