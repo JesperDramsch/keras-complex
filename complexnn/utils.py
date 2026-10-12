@@ -148,31 +148,50 @@ def _compute_fans(shape, data_format="channels_last"):
     return fan_in, fan_out
 
 
+def _check_part_shape(layer, input_shape):
+    """Check the axis that `get_realpart` and `get_imagpart` split, if known."""
+    shape = tuple(input_shape)
+    axis = _complex_part_axis(len(shape))
+    # An undefined size is split from the dynamic shape in `call`, which
+    # works on Keras 2, so only check sizes that are known here.
+    if shape[axis] is not None:
+        _check_complex_axis(layer, shape, axis)
+
+
 class _ComplexPart(Layer):
-    """Base class for the layers that split their input into its two parts."""
+    """Base class for the layers that split their input into its two parts.
+
+    These layers have no weights and accept inputs of any width and rank, so
+    one instance can be called on several tensors. Keras only builds a layer
+    on its first call, so the layout is also checked in `call`, which covers
+    eager tensors and symbolic tensors on Keras 2, and in
+    `compute_output_shape`, which Keras 3 uses for symbolic tensors instead
+    of tracing `call`.
+    """
 
     def build(self, input_shape):
-        axis = _complex_part_axis(len(input_shape))
-        # An undefined size is split from the dynamic shape in `call`, which
-        # works on Keras 2, so only check sizes that are known here.
-        if tuple(input_shape)[axis] is not None:
-            _check_complex_axis(self, input_shape, axis)
+        _check_part_shape(self, input_shape)
         super(_ComplexPart, self).build(input_shape)
 
+    def call(self, inputs):
+        _check_part_shape(self, inputs.shape)
+        return self._split(inputs)
+
     def compute_output_shape(self, input_shape):
+        _check_part_shape(self, input_shape)
         return getpart_output_shape(input_shape)
 
 
 class GetReal(_ComplexPart):
-    def call(self, inputs):
+    def _split(self, inputs):
         return get_realpart(inputs)
 
 
 class GetImag(_ComplexPart):
-    def call(self, inputs):
+    def _split(self, inputs):
         return get_imagpart(inputs)
 
 
 class GetAbs(_ComplexPart):
-    def call(self, inputs):
+    def _split(self, inputs):
         return get_abs(inputs)

@@ -127,6 +127,25 @@ class TestComplexAxisValidation(unittest.TestCase):
                 self.assertLayoutError(layer_class(), (1,), "axis 1 has size 1")
                 self.assertLayoutError(layer_class(), (8, 0), "axis -1 has size 0")
 
+    def test_get_parts_reused_instance(self):
+        """A part layer checks every input, not only the one it was built on
+
+        These layers have no weights, so one instance is often reused. Keras
+        builds a layer once, so the check also runs in call and in
+        compute_output_shape.
+        """
+        for layer_class in (conn.GetReal, conn.GetImag, conn.GetAbs):
+            with self.subTest(layer=layer_class.__name__):
+                layer = layer_class()
+                layer(Input(shape=(8, 2)))
+                with self.assertRaisesRegex(ValueError, LAYOUT_ERROR):
+                    layer(Input(shape=(8, 3)))
+                with self.assertRaisesRegex(ValueError, LAYOUT_ERROR):
+                    layer(np.zeros((2, 8, 5), dtype="float32"))
+                # A different valid width still works with the same instance.
+                output = layer(Input(shape=(8, 4)))
+                self.assertEqual(tuple(output.shape), (None, 8, 2))
+
     def test_get_parts_undefined_size(self):
         """An undefined size is left to the dynamic split in call"""
         for layer_class in (conn.GetReal, conn.GetImag, conn.GetAbs):
