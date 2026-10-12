@@ -42,8 +42,10 @@ LAYERS = {
     ),
     "ComplexConv3D": ((4, 4, 4, 4), lambda: conn.ComplexConv3D(2, 3, padding="same")),
     "ComplexBN": ((4, 4, 8), lambda: conn.ComplexBN()),
-    "ComplexLayerNorm": ((8,), lambda: conn.ComplexLayerNorm()),
-    "LayerNormalization": ((8,), lambda: conn.LayerNormalization()),
+    # On a 2D input both layer norms reduce over no axes and return beta, so
+    # they get inputs with a feature axis on which the output depends on gamma.
+    "ComplexLayerNorm": ((4, 4, 8), lambda: conn.ComplexLayerNorm()),
+    "LayerNormalization": ((4, 8), lambda: conn.LayerNormalization()),
     "GetReal": ((8,), lambda: conn.GetReal()),
     "GetImag": ((4, 4, 8), lambda: conn.GetImag()),
     "GetAbs": ((8,), lambda: conn.GetAbs()),
@@ -128,6 +130,10 @@ class TestKerasFileRoundTrip(unittest.TestCase):
                 model = build_model(shape, make_layer, rng)
                 loaded = self.save_and_load(model, f"layer_{i}")
                 self.assertIs(type(loaded.layers[-1]), type(model.layers[-1]))
+                restored = loaded.get_weights()
+                self.assertEqual(len(restored), len(model.get_weights()))
+                for w_loaded, w_saved in zip(restored, model.get_weights()):
+                    np.testing.assert_array_equal(w_loaded, w_saved)
 
                 x = rng.standard_normal((3, *shape)).astype("float32")
                 np.testing.assert_allclose(
