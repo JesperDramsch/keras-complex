@@ -22,7 +22,8 @@ class ComplexDense(Layer):
     (only applicable if `use_bias` is `True`).
     Note: if the input to the layer has a rank greater than 2, then
     AN ERROR MESSAGE IS PRINTED.
-    # Arguments
+
+    Arguments:
         units: Positive integer, dimensionality of each of the real part
             and the imaginary part. It is actualy the number of complex units.
         activation: Activation function to use
@@ -48,9 +49,11 @@ class ComplexDense(Layer):
             (see keras.constraints).
         bias_constraint: Constraint function applied to the bias vector
             (see keras.constraints).
-    # Input shape
+
+    Input shape:
         a 2D input with shape `(batch_size, input_dim)`.
-    # Output shape
+
+    Output shape:
         For a 2D input with shape `(batch_size, input_dim)`,
         the output would have shape `(batch_size, units)`.
     """

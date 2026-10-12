@@ -264,7 +264,8 @@ class ComplexBatchNormalization(Layer):
     close to the null vector, the 2 by 2 covariance matrix of a complex unit close to identity
     and the 2 by 2 relation matrix, also called pseudo-covariance, close to the
     null matrix.
-    # Arguments
+
+    Arguments:
         axis: Integer, the axis that should be normalized
             (typically the features axis).
             For instance, after a `Conv2D` layer with
@@ -291,13 +292,16 @@ class ComplexBatchNormalization(Layer):
         gamma_regularizer: Optional regularizer for the gamma weights.
         beta_constraint: Optional constraint for the beta weights.
         gamma_constraint: Optional constraint for the gamma weights.
-    # Input shape
+
+    Input shape:
         Arbitrary. Use the keyword argument `input_shape`
         (tuple of integers, does not include the samples axis)
         when using this layer as the first layer in a model.
-    # Output shape
+
+    Output shape:
         Same shape as input.
-    # References
+
+    References:
         - [Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
     """
 

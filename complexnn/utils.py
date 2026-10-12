@@ -77,13 +77,13 @@ def _check_complex_axis(layer, input_shape, axis, hint=""):
     the imaginary parts. That axis must therefore have an even size of at
     least 2.
 
-    # Arguments
+    Arguments:
         layer: The layer doing the check, named in the error message.
         input_shape: Shape of the layer input, including the batch axis.
         axis: Integer, the axis that holds the real and imaginary parts.
         hint: Optional sentence added to the end of the error message.
 
-    # Raises
+    Raises:
         ValueError: If the size of `axis` is undefined, odd or smaller than 2.
     """
     shape = tuple(input_shape)
@@ -110,16 +110,18 @@ def _check_complex_axis(layer, input_shape, axis, hint=""):
 # this is the implementation copied from keras-2:
 def _compute_fans(shape, data_format="channels_last"):
     """Computes the number of input and output units for a weight shape.
-    # Arguments
 
+    Arguments:
         shape: Integer shape tuple.
         data_format: Image data format to use for convolution kernels.
             Note that all kernels in Keras are standardized on the
             `channels_last` ordering (even when inputs are set
             to `channels_first`).
-    # Returns
+
+    Returns:
         A tuple of scalars, `(fan_in, fan_out)`.
-    # Raises
+
+    Raises:
         ValueError: in case of invalid `data_format` argument.
     """
     if len(shape) == 2:

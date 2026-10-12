@@ -663,7 +663,8 @@ class ComplexConv1D(ComplexConv):
     (tuple of integers or `None`, e.g.
     `(10, 128)` for sequences of 10 vectors of 128-dimensional vectors,
     or `(None, 128)` for variable-length sequences of 128-dimensional vectors.
-    # Arguments
+
+    Arguments:
         filters: Integer, the dimensionality of the output space, i.e,
             the number of complex feature maps. It is also the effective number
             of feature maps for each of the real and imaginary parts.
@@ -721,9 +722,11 @@ class ComplexConv1D(ComplexConv):
         spectral_parametrization: Whether or not to use a spectral
             parametrization of the parameters.
         transposed: Boolean, whether or not to use transposed convolution
-    # Input shape
+
+    Input shape:
         3D tensor with shape: `(batch_size, steps, input_dim)`
-    # Output shape
+
+    Output shape:
         3D tensor with shape: `(batch_size, new_steps, 2 x filters)`
         `steps` value might have changed due to padding or strides.
     """
@@ -792,7 +795,8 @@ class ComplexConv2D(ComplexConv):
     (tuple of integers, does not include the sample axis),
     e.g. `input_shape=(128, 128, 3)` for 128x128 RGB pictures
     in `data_format="channels_last"`.
-    # Arguments
+
+    Arguments:
         filters: Integer, the dimensionality of the complex output space
             (i.e, the number complex feature maps in the convolution). The
             total effective number of filters or feature maps is 2 x filters.
@@ -860,12 +864,14 @@ class ComplexConv2D(ComplexConv):
         spectral_parametrization: Whether or not to use a spectral
             parametrization of the parameters.
         transposed: Boolean, whether or not to use transposed convolution
-    # Input shape
+
+    Input shape:
         4D tensor with shape:
         `(samples, channels, rows, cols)` if data_format='channels_first'
         or 4D tensor with shape:
         `(samples, rows, cols, channels)` if data_format='channels_last'.
-    # Output shape
+
+    Output shape:
         4D tensor with shape:
         `(samples, 2 x filters, new_rows, new_cols)` if
         data_format='channels_first' or 4D tensor with shape:
@@ -940,7 +946,8 @@ class ComplexConv3D(ComplexConv):
     e.g. `input_shape=(2, 128, 128, 128, 3)` for 128x128x128 volumes
     with 3 channels,
     in `data_format="channels_last"`.
-    # Arguments
+
+    Arguments:
         filters: Integer, the dimensionality of the complex output space
             (i.e, the number complex feature maps in the convolution). The
             total effective number of filters or feature maps is 2 x filters.
@@ -1007,14 +1014,16 @@ class ComplexConv3D(ComplexConv):
         spectral_parametrization: Whether or not to use a spectral
             parametrization of the parameters.
         transposed: Boolean, whether or not to use transposed convolution
-    # Input shape
+
+    Input shape:
         5D tensor with shape:
         `(samples, channels, conv_dim1, conv_dim2, conv_dim3)` if
         data_format='channels_first'
         or 5D tensor with shape:
         `(samples, conv_dim1, conv_dim2, conv_dim3, channels)` if
         data_format='channels_last'.
-    # Output shape
+
+    Output shape:
         5D tensor with shape:
         `(samples, 2 x filters, new_conv_dim1, new_conv_dim2, new_conv_dim3)`
         if data_format='channels_first'

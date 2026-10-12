@@ -30,9 +30,18 @@ author = "Jesper Dramsch, Chiheb Trabelsi, Olexa Bilaniuk, Bruce Sharpe, Ying Zh
 extensions = [
     "sphinxcontrib.apidoc",
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "myst_parser",
     "sphinxcontrib.bibtex",
 ]
+
+# The docstrings use Google style sections, plus these Keras ones.
+napoleon_custom_sections = ["Input shape", "Output shape"]
+
+# Methods without a docstring would otherwise show the docstring of the
+# Keras base class. That text changes with the installed Keras version, and
+# the one WeightNorm_Conv.call inherits is not valid reStructuredText.
+autodoc_inherit_docstrings = False
 
 master_doc = "index"  # Needed by RTD
 
