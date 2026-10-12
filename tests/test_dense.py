@@ -19,6 +19,18 @@ class TestDenseMethods(unittest.TestCase):
         calc = layer.compute_output_shape(input_shape)
         self.assertEqual(true, calc)
 
+    def test_call_multiplies_by_conjugate_kernel(self):
+        """The output is the complex product of the input and the conjugate kernel"""
+        # ComplexConv multiplies by its kernel, ComplexDense by the conjugate of
+        # its kernel. This test records the current behaviour.
+        rng = np.random.default_rng(0)
+        x = rng.standard_normal((4, 6)).astype("float32")  # 3 real, then 3 imaginary
+        layer = conn.ComplexDense(units=2, use_bias=False)
+        y = layer(x).numpy()
+        kernel = layer.real_kernel.numpy() + 1j * layer.imag_kernel.numpy()
+        expected = (x[:, :3] + 1j * x[:, 3:]) @ np.conj(kernel)
+        np.testing.assert_allclose(y[:, :2] + 1j * y[:, 2:], expected, atol=1e-5)
+
 
 class TestDenseConfig(unittest.TestCase):
     """ComplexDense configs rebuild the same kernel initialiser"""

@@ -1,7 +1,8 @@
 import unittest
 
-import complexnn as conn
 import tensorflow as tf
+
+import complexnn as conn
 from complexnn.bn import sqrt_init
 
 
@@ -53,3 +54,12 @@ class TestComplexLayerNormShape(unittest.TestCase):
         for shape in [(None, 8), (None, 4, 4, 8)]:
             with self.subTest(shape=shape):
                 self.assertEqual(tuple(layer.compute_output_shape(shape)), shape)
+
+
+class TestComplexLayerNormBuild(unittest.TestCase):
+    """Input checks in ComplexLayerNorm.build"""
+
+    def test_build_rejects_unknown_rank(self):
+        """Building for an input of unknown rank raises ValueError"""
+        with self.assertRaises(ValueError):
+            conn.ComplexLayerNorm().build(tf.TensorShape(None))

@@ -57,6 +57,16 @@ class TestConvMethods(unittest.TestCase):
         calc = model.output_shape
         self.assertEqual(true, calc)
 
+    def test_spectral_parametrization_not_implemented(self):
+        """spectral_parametrization=True raises NotImplementedError when called"""
+        for layer, shape in (
+            (conn.ComplexConv1D(2, 3, spectral_parametrization=True), (2, 8, 4)),
+            (conn.ComplexConv2D(2, 3, spectral_parametrization=True), (2, 8, 8, 4)),
+        ):
+            with self.subTest(layer=type(layer).__name__):
+                with self.assertRaises(NotImplementedError):
+                    layer(np.zeros(shape, "float32"))
+
 
 class TestConvConfig(unittest.TestCase):
     """Conv layer configs rebuild the same layer"""

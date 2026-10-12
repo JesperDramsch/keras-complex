@@ -1,8 +1,9 @@
 import unittest
 
-import complexnn as conn
 import numpy as np
 import tensorflow as tf
+
+import complexnn as conn
 
 
 class TestComplexBatchNormalization(unittest.TestCase):
@@ -58,3 +59,12 @@ class TestComplexBatchNormalizationShape(unittest.TestCase):
         for shape in [(None, 8), (None, 4, 4, 8)]:
             with self.subTest(shape=shape):
                 self.assertEqual(tuple(layer.compute_output_shape(shape)), shape)
+
+
+class TestComplexBatchNormalizationBuild(unittest.TestCase):
+    """Input checks in ComplexBatchNormalization.build"""
+
+    def test_build_rejects_unknown_rank(self):
+        """Building for an input of unknown rank raises ValueError"""
+        with self.assertRaises(ValueError):
+            conn.ComplexBN().build(tf.TensorShape(None))
