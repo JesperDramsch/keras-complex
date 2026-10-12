@@ -30,7 +30,7 @@ z = np.random.randn(8, 28, 28, 2) + 1j * np.random.randn(8, 28, 28, 2)
 x = np.concatenate([z.real, z.imag], axis=-1)  # shape (8, 28, 28, 4)
 ```
 
-With `data_format="channels_first"`, concatenate along axis 1 instead.
+For `ComplexConv2D` and `ComplexConv3D` with `data_format="channels_first"`, concatenate along axis 1 instead.
 
 The complex layers return their outputs in the same layout. A `ComplexConv2D` with `filters=f` returns `2 * f` channels, the real parts of its `f` complex feature maps followed by their imaginary parts, and a `ComplexDense` with `units=u` returns `2 * u` features. The layers can therefore be stacked directly. Keras layers that treat each channel on its own, such as activations and pooling, act on the real and imaginary parts separately.
 
@@ -48,7 +48,8 @@ Inside a model, `GetReal`, `GetImag` and `GetAbs` return the real parts, the ima
 
 | Layer | Axis that holds the real and imaginary parts |
 |---|---|
-| `ComplexConv1D`, `ComplexConv2D`, `ComplexConv3D` | The channel axis: the last axis, or axis 1 with `data_format="channels_first"`. When `data_format` is not given, the layers use the Keras image data format, which is `channels_last` unless configured otherwise. |
+| `ComplexConv1D` | Always the last axis. It has no `data_format` argument and ignores the Keras image data format. |
+| `ComplexConv2D`, `ComplexConv3D` | The channel axis: the last axis, or axis 1 with `data_format="channels_first"`. When `data_format` is not given, the layers use the Keras image data format, which is `channels_last` unless configured otherwise. |
 | `ComplexDense` | The last axis of its 2D input `(batch_size, features)`. |
 | `ComplexBatchNormalization`, `ComplexLayerNorm` | The axis given by their `axis` argument, the last axis by default. |
 | `GetReal`, `GetImag`, `GetAbs` | The last axis, except for 4D and 5D inputs when the Keras image data format is `channels_first`, where they use axis 1. |
