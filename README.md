@@ -1,6 +1,18 @@
 # Complex-Valued Neural Networks in Keras with Tensorflow
 [![Documentation](https://readthedocs.org/projects/keras-complex/badge/?version=latest)](https://keras-complex.readthedocs.io/) [![Build Status](https://github.com/JesperDramsch/keras-complex/actions/workflows/test_python.yml/badge.svg)](https://github.com/JesperDramsch/keras-complex/actions/) [![PyPI Versions](https://img.shields.io/pypi/pyversions/keras-complex.svg)](https://pypi.python.org/pypi/keras-complex) ![Tensorflow 2+](https://img.shields.io/badge/tensorflow-%3E2.0-orange) ![PyPI - Downloads](https://img.shields.io/pypi/dm/keras-complex)  [![PyPI Status](https://img.shields.io/pypi/status/keras-complex.svg)](https://pypi.python.org/pypi/keras-complex) [![PyPI License](https://img.shields.io/badge/License-MIT-green)](LICENSE.md)
 
+## Status
+
+keras-complex is being updated for Keras 3. The current release, 0.2.3, does not work with TensorFlow 2.16 or later, because TensorFlow now ships Keras 3 (see [#23](https://github.com/JesperDramsch/keras-complex/issues/23)). Its package metadata is also invalid, so pip 24.1 and later skip it and install the older 0.1.3 instead. Version 0.3.0 will fix both.
+
+Until then, install from GitHub and use TensorFlow 2.15, or keep a newer TensorFlow and add `tf-keras`:
+
+```
+pip install "git+https://github.com/JesperDramsch/keras-complex" tf-keras
+```
+
+With `tf-keras`, set `TF_USE_LEGACY_KERAS=1` before TensorFlow is first imported.
+
 [Complex-valued convolutions](https://en.wikipedia.org/wiki/Convolution#Domain_of_definition) could provide some interesting results in signal processing-based deep learning. A simple(-ish) idea is including explicit phase information of time series in neural networks. This code enables complex-valued convolution in convolutional neural networks in [keras](https://keras.io) with the [TensorFlow](https://tensorflow.org/) backend. This makes the network modular and interoperable with standard keras layers and operations.
 
 This code is very much in **Alpha**. Please consider helping out improving the code to advance together. This repository is based on the code which reproduces experiments presented in the paper [Deep Complex Networks](https://arxiv.org/abs/1705.09792). It is a port to Keras with Tensorflow-backend.
