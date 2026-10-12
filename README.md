@@ -74,7 +74,7 @@ z = np.random.randn(8, 3, 3, 2) + 1j * np.random.randn(8, 3, 3, 2)  # two comple
 x = np.concatenate([z.real, z.imag], axis=-1)  # shape (8, 3, 3, 4)
 ```
 
-The complex layers return their outputs in the same format: `ComplexConv2D(filters=f)` returns `2 * f` channels, the real parts first. `complexnn.GetReal`, `complexnn.GetImag` and `complexnn.GetAbs` split such a tensor into its real parts, imaginary parts and magnitudes. The [data layout page in the docs](https://keras-complex.readthedocs.io/en/latest/layout.html) lists the axis each layer uses, and the [math page](https://keras-complex.readthedocs.io/en/latest/math.html) shows how the complex convolution is computed.
+The complex layers return their outputs in the same format: `ComplexConv2D(filters=f)` returns `2 * f` channels, the real parts first. `complexnn.GetReal`, `complexnn.GetImag` and `complexnn.GetAbs` split such a tensor into its real parts, imaginary parts and magnitudes. The [data layout page in the docs](https://keras-complex.readthedocs.io/layout.html) lists the axis each layer uses, and the [math page](https://keras-complex.readthedocs.io/math.html#implementation) shows how the complex convolution is computed.
 
 Citation
 --------
