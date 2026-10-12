@@ -494,48 +494,40 @@ class ComplexBatchNormalization(Layer):
             self.center,
             axis=self.axis,
         )
-        if training in {0, False}:
-            return input_bn
-        update_list = []
-        if self.center:
-            update_list.append(
-                K.moving_average_update(self.moving_mean, mu, self.momentum)
-            )
-        if self.scale:
-            update_list.append(
-                K.moving_average_update(self.moving_Vrr, Vrr, self.momentum)
-            )
-            update_list.append(
-                K.moving_average_update(self.moving_Vii, Vii, self.momentum)
-            )
-            update_list.append(
-                K.moving_average_update(self.moving_Vri, Vri, self.momentum)
-            )
-        self.add_update(update_list)
 
-        def normalize_inference():
+        # Keras 3 removed add_update and K.in_train_phase. Update the moving
+        # statistics with assign while training, as Keras' own BatchNormalization
+        # does; this works on Keras 2 as well.
+        def update_moving_average(variable, value):
+            variable.assign(variable * self.momentum + value * (1.0 - self.momentum))
+
+        if training:
             if self.center:
-                inference_centred = inputs - K.reshape(
-                    self.moving_mean, broadcast_mu_shape
-                )
-            else:
-                inference_centred = inputs
-            return ComplexBN(
-                inference_centred,
-                self.moving_Vrr,
-                self.moving_Vii,
-                self.moving_Vri,
-                self.beta,
-                self.gamma_rr,
-                self.gamma_ri,
-                self.gamma_ii,
-                self.scale,
-                self.center,
-                axis=self.axis,
-            )
+                update_moving_average(self.moving_mean, mu)
+            if self.scale:
+                update_moving_average(self.moving_Vrr, Vrr)
+                update_moving_average(self.moving_Vii, Vii)
+                update_moving_average(self.moving_Vri, Vri)
+            return input_bn
 
-        # Pick the normalized form corresponding to the training phase.
-        return K.in_train_phase(input_bn, normalize_inference, training=training)
+        # Inference: normalise with the moving statistics.
+        if self.center:
+            inference_centred = inputs - K.reshape(self.moving_mean, broadcast_mu_shape)
+        else:
+            inference_centred = inputs
+        return ComplexBN(
+            inference_centred,
+            self.moving_Vrr,
+            self.moving_Vii,
+            self.moving_Vri,
+            self.beta,
+            self.gamma_rr,
+            self.gamma_ri,
+            self.gamma_ii,
+            self.scale,
+            self.center,
+            axis=self.axis,
+        )
 
     def get_config(self):
         config = {
