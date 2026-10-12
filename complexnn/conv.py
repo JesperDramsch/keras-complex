@@ -9,9 +9,13 @@ from tensorflow.keras.layers import (
     InputSpec,
     Layer,
 )
-from tensorflow.python.keras.layers.convolutional import Conv
-from tensorflow.python.keras.utils import conv_utils
 
+# WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
+# private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
+# rebuild on the public Layer class; until then this is the one private import.
+from tensorflow.python.keras.layers.convolutional import Conv
+
+from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .fft import fft, fft2, ifft, ifft2
