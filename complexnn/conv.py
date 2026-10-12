@@ -17,6 +17,7 @@ from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .fft import fft, fft2, ifft, ifft2
 from .init import ComplexIndependentFilters, ComplexInit
+from .utils import get_initializer
 
 
 def conv1d_transpose(
@@ -165,7 +166,7 @@ def sanitizedInitGet(init):
     elif init in ["complex", "complex_independent", "glorot_complex", "he_complex"]:
         return init
     else:
-        return initializers.get(init)
+        return get_initializer(init)
 
 
 def sanitizedInitSer(init):

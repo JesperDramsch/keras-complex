@@ -8,7 +8,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
 from tensorflow.keras.utils import register_keras_serializable
 
-from .utils import _compute_fans
+from .utils import _compute_fans, get_initializer
 
 
 @register_keras_serializable(package="complexnn")
@@ -85,8 +85,8 @@ class ComplexDense(Layer):
         if kernel_initializer == "complex":
             self.kernel_initializer = kernel_initializer
         else:
-            self.kernel_initializer = initializers.get(kernel_initializer)
-        self.bias_initializer = initializers.get(bias_initializer)
+            self.kernel_initializer = get_initializer(kernel_initializer)
+        self.bias_initializer = get_initializer(bias_initializer)
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.bias_regularizer = regularizers.get(bias_regularizer)
         self.activity_regularizer = regularizers.get(activity_regularizer)

@@ -12,6 +12,8 @@ from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
 from tensorflow.keras.utils import register_keras_serializable
 
+from .utils import get_initializer
+
 
 def sqrt_init(shape, dtype=None):
     value = (1 / np.sqrt(2)) * K.ones(shape)
@@ -22,7 +24,7 @@ def sanitizedInitGet(init):
     if init in ["sqrt_init"]:
         return sqrt_init
     else:
-        return initializers.get(init)
+        return get_initializer(init)
 
 
 def sanitizedInitSer(init):

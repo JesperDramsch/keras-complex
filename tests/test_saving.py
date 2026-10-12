@@ -1,4 +1,5 @@
 import inspect
+import json
 import os
 import tempfile
 import unittest
@@ -213,6 +214,38 @@ class TestKerasFileRoundTrip(unittest.TestCase):
                 for w_loaded, w_saved in zip(restored, model.get_weights()):
                     np.testing.assert_array_equal(w_loaded, w_saved)
 
+                x = rng.standard_normal((3, *shape)).astype("float32")
+                np.testing.assert_allclose(
+                    loaded.predict(x, verbose=0),
+                    model.predict(x, verbose=0),
+                    rtol=1e-6,
+                    atol=1e-6,
+                )
+
+    def test_h5_with_complex_initializer(self):
+        """Legacy .h5 files keep a complexnn initialiser instance
+
+        Keras 2's .h5 loader looks an initialiser up by its bare class name,
+        which is not where complexnn registers it.
+        """
+        rng = np.random.default_rng(2)
+        for name in ("ComplexDense ComplexInit", "ComplexConv2D ComplexInit"):
+            shape, make_layer = LAYERS[name]
+            with self.subTest(name):
+                model = build_model(shape, make_layer, rng)
+                path = os.path.join(self.tmp, name.replace(" ", "_") + ".h5")
+                with warnings.catch_warnings():
+                    # Keras 3 warns that .h5 is a legacy format.
+                    warnings.simplefilter("ignore")
+                    model.save(path)
+                    loaded = tf.keras.models.load_model(path)
+                restored = loaded.layers[-1].kernel_initializer
+                self.assertIs(type(restored), conn.ComplexInit)
+                # The file stores JSON, which turns tuples into lists.
+                saved_config = model.layers[-1].kernel_initializer.get_config()
+                self.assertEqual(
+                    restored.get_config(), json.loads(json.dumps(saved_config))
+                )
                 x = rng.standard_normal((3, *shape)).astype("float32")
                 np.testing.assert_allclose(
                     loaded.predict(x, verbose=0),

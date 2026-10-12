@@ -3,8 +3,29 @@
 
 import numpy as np
 import tensorflow.keras.backend as K
+from tensorflow.keras import initializers
 from tensorflow.keras.layers import Lambda, Layer
-from tensorflow.keras.utils import register_keras_serializable
+from tensorflow.keras.utils import get_registered_object, register_keras_serializable
+
+
+def get_initializer(identifier):
+    """Resolve an initialiser like ``initializers.get``, complexnn ones included.
+
+    The legacy .h5 loader looks a serialised initialiser up by its bare class
+    name, while complexnn registers its classes as ``complexnn>ClassName``, so
+    a ``ComplexInit`` saved with its config would not load. When Keras cannot
+    resolve such a config, look it up by its registered name instead.
+    """
+    try:
+        return initializers.get(identifier)
+    except (ValueError, TypeError):
+        if isinstance(identifier, dict):
+            registered = str(identifier.get("registered_name") or "")
+            cls = get_registered_object(registered) if registered else None
+            if cls is not None and registered.startswith("complexnn>"):
+                return cls.from_config(identifier.get("config") or {})
+        raise
+
 
 #
 # GetReal/GetImag Lambda layer Implementation
