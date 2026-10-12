@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import numpy as np
 import tensorflow as tf
@@ -155,7 +154,7 @@ def conv_transpose_output_length(
 ):
     """Rearrange arguments for compatibility with conv_output_length."""
     if dilation != 1:
-        msg = f"Dilation must be 1 for transposed convolution. "
+        msg = "Dilation must be 1 for transposed convolution. "
         msg += f"Got dilation = {dilation}"
         raise ValueError(msg)
     # return conv_utils.deconv_length(
@@ -298,7 +297,7 @@ class ComplexConv(Layer):
         **kwargs,
     ):
         with _ignore_input_shape_warning(kwargs):
-            super(ComplexConv, self).__init__(**kwargs)
+            super().__init__(**kwargs)
         self.rank = rank
         self.filters = filters
         self.kernel_size = conv_utils.normalize_tuple(kernel_size, rank, "kernel_size")
@@ -647,7 +646,7 @@ class ComplexConv(Layer):
             "transposed": self.transposed,
             "epsilon": self.epsilon,
         }
-        base_config = super(ComplexConv, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
@@ -760,7 +759,7 @@ class ComplexConv1D(ComplexConv):
         transposed=False,
         **kwargs,
     ):
-        super(ComplexConv1D, self).__init__(
+        super().__init__(
             rank=1,
             filters=filters,
             kernel_size=kernel_size,
@@ -784,7 +783,7 @@ class ComplexConv1D(ComplexConv):
         )
 
     def get_config(self):
-        config = super(ComplexConv1D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         # __init__ always passes data_format="channels_last" to ComplexConv.
         config.pop("data_format")
@@ -916,7 +915,7 @@ class ComplexConv2D(ComplexConv):
         transposed=False,
         **kwargs,
     ):
-        super(ComplexConv2D, self).__init__(
+        super().__init__(
             rank=2,
             filters=filters,
             kernel_size=kernel_size,
@@ -940,7 +939,7 @@ class ComplexConv2D(ComplexConv):
         )
 
     def get_config(self):
-        config = super(ComplexConv2D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -1073,7 +1072,7 @@ class ComplexConv3D(ComplexConv):
         transposed=False,
         **kwargs,
     ):
-        super(ComplexConv3D, self).__init__(
+        super().__init__(
             rank=3,
             filters=filters,
             kernel_size=kernel_size,
@@ -1097,7 +1096,7 @@ class ComplexConv3D(ComplexConv):
         )
 
     def get_config(self):
-        config = super(ComplexConv3D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -1122,7 +1121,7 @@ class WeightNorm_Conv(Conv):
         epsilon=1e-07,
         **kwargs,
     ):
-        super(WeightNorm_Conv, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if self.rank == 1:
             self.data_format = "channels_last"
         self.gamma_initializer = sanitizedInitGet(gamma_initializer)
@@ -1132,7 +1131,7 @@ class WeightNorm_Conv(Conv):
         self.gamma = None
 
     def build(self, input_shape):
-        super(WeightNorm_Conv, self).build(input_shape)
+        super().build(input_shape)
         if self.data_format == "channels_first":
             channel_axis = 1
         else:
@@ -1201,7 +1200,7 @@ class WeightNorm_Conv(Conv):
             "gamma_constraint": constraints.serialize(self.gamma_constraint),
             "epsilon": self.epsilon,
         }
-        base_config = super(WeightNorm_Conv, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 

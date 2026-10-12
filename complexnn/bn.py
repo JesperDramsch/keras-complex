@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # Note: The implementation of complex Batchnorm is based on
 #       the Keras implementation of batch Normalization
@@ -12,11 +11,7 @@ from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
 from tensorflow.keras.utils import register_keras_serializable
 
-from .utils import get_initializer
-
-from .utils import _ignore_input_shape_warning
-
-from .utils import _check_complex_axis
+from .utils import _check_complex_axis, _ignore_input_shape_warning, get_initializer
 
 
 def sqrt_init(shape, dtype=None):
@@ -336,7 +331,7 @@ class ComplexBatchNormalization(Layer):
         **kwargs,
     ):
         with _ignore_input_shape_warning(kwargs):
-            super(ComplexBatchNormalization, self).__init__(**kwargs)
+            super().__init__(**kwargs)
         self.supports_masking = True
         self.axis = axis
         self.momentum = momentum
@@ -581,5 +576,5 @@ class ComplexBatchNormalization(Layer):
             "gamma_diag_constraint": constraints.serialize(self.gamma_diag_constraint),
             "gamma_off_constraint": constraints.serialize(self.gamma_off_constraint),
         }
-        base_config = super(ComplexBatchNormalization, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))

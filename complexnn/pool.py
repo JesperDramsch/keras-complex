@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import numpy as np
 import tensorflow.keras as KE
@@ -15,7 +14,7 @@ from tensorflow.keras.utils import register_keras_serializable
 @register_keras_serializable(package="complexnn")
 class SpectralPooling1D(KL.Layer):
     def __init__(self, topf=(0,), **kwargs):
-        super(SpectralPooling1D, self).__init__()
+        super().__init__()
         if "topf" in kwargs:
             self.topf = (int(kwargs["topf"][0]),)
             self.topf = (self.topf[0] // 2,)
@@ -60,7 +59,7 @@ class SpectralPooling1D(KL.Layer):
 @register_keras_serializable(package="complexnn")
 class SpectralPooling2D(KL.Layer):
     def __init__(self, **kwargs):
-        super(SpectralPooling2D, self).__init__()
+        super().__init__()
         if "topf" in kwargs:
             self.topf = (int(kwargs["topf"][0]), int(kwargs["topf"][1]))
             self.topf = (self.topf[0] // 2, self.topf[1] // 2)

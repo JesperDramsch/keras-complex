@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import contextlib
 import re
@@ -236,7 +235,7 @@ class _ComplexPart(Layer):
 
     def build(self, input_shape):
         _check_part_shape(self, input_shape)
-        super(_ComplexPart, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, inputs):
         _check_part_shape(self, inputs.shape)

@@ -1,9 +1,8 @@
 import unittest
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.layers import Dense, Input, MaxPooling2D
-from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
 
 import complexnn as conn
 

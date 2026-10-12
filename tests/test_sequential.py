@@ -1,8 +1,9 @@
 import unittest
 
-import complexnn as conn
 import numpy as np
 import tensorflow as tf
+
+import complexnn as conn
 
 
 class TestLayersInSequential(unittest.TestCase):
