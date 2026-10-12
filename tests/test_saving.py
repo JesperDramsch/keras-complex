@@ -211,7 +211,9 @@ class TestKerasFileRoundTrip(unittest.TestCase):
                 self.assertIs(type(loaded.layers[-1]), type(model.layers[-1]))
                 restored = loaded.get_weights()
                 self.assertEqual(len(restored), len(model.get_weights()))
-                for w_loaded, w_saved in zip(restored, model.get_weights()):
+                for w_loaded, w_saved in zip(
+                    restored, model.get_weights(), strict=True
+                ):
                     np.testing.assert_array_equal(w_loaded, w_saved)
 
                 x = rng.standard_normal((3, *shape)).astype("float32")
