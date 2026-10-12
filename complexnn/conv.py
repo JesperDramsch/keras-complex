@@ -10,16 +10,29 @@ from tensorflow.keras.layers import (
     Layer,
 )
 
-# WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
-# private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
-# rebuild on the public Layer class; until then this is the one private import.
-from tensorflow.python.keras.layers.convolutional import Conv
-
 from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .init import ComplexIndependentFilters, ComplexInit
 from .utils import _ignore_input_shape_warning
+
+# WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
+# private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
+# rebuild on the public Layer class; until then this is the one private import.
+# TensorFlow may drop the private copy, so `import complexnn` must not depend on
+# it: without it, only building a WeightNorm_Conv fails.
+try:
+    from tensorflow.python.keras.layers.convolutional import Conv
+except ImportError:
+
+    class Conv:
+        """Stand-in base class that makes building a WeightNorm_Conv fail"""
+
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "WeightNorm_Conv needs tensorflow.python.keras, TensorFlow's "
+                "private copy of Keras 2, which this TensorFlow does not provide."
+            )
 
 
 def conv1d_transpose(
