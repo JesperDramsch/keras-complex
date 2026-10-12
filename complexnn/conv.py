@@ -635,6 +635,7 @@ class ComplexConv(Layer):
             "init_criterion": self.init_criterion,
             "spectral_parametrization": self.spectral_parametrization,
             "transposed": self.transposed,
+            "epsilon": self.epsilon,
         }
         base_config = super(ComplexConv, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))

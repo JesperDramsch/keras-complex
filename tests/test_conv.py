@@ -68,3 +68,11 @@ class TestConvConfig(unittest.TestCase):
         clone = conn.ComplexConv1D.from_config(config)
         self.assertEqual(clone.get_config(), config)
         self.assertEqual(clone.data_format, "channels_last")
+
+    def test_epsilon_in_config(self):
+        """epsilon changes the normalised kernel, so from_config must keep it"""
+        layer = conn.ComplexConv2D(
+            filters=2, kernel_size=3, normalize_weight=True, epsilon=1e-3
+        )
+        clone = conn.ComplexConv2D.from_config(layer.get_config())
+        self.assertEqual(clone.epsilon, 1e-3)
