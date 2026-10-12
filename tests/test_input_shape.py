@@ -74,9 +74,13 @@ class TestIgnoreInputShapeWarning(unittest.TestCase):
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             with _ignore_input_shape_warning(kwargs):
-                warnings.warn(f"{INPUT_SHAPE_WARNING} to a layer.", UserWarning)
-                warnings.warn("Another warning.", UserWarning)
-            warnings.warn(f"{INPUT_SHAPE_WARNING} outside the block.", UserWarning)
+                warnings.warn(
+                    f"{INPUT_SHAPE_WARNING} to a layer.", UserWarning, stacklevel=1
+                )
+                warnings.warn("Another warning.", UserWarning, stacklevel=1)
+            warnings.warn(
+                f"{INPUT_SHAPE_WARNING} outside the block.", UserWarning, stacklevel=1
+            )
         return [str(w.message) for w in caught]
 
     @unittest.skipUnless(_KERAS_3, "only Keras 3 emits the input_shape warning")
@@ -106,7 +110,8 @@ REPEATED_WARNING = "A warning from one place in the code."
 
 
 def warn_from_one_place():
-    warnings.warn(REPEATED_WARNING, UserWarning)
+    # stacklevel=1 attributes the warning to this line, the one place it comes from.
+    warnings.warn(REPEATED_WARNING, UserWarning, stacklevel=1)
 
 
 class TestWarningsShownOnce(unittest.TestCase):
