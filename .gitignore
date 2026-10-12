@@ -49,3 +49,7 @@ venv
 dist/*
 
 __pycache__/*
+
+# Sphinx output and the API pages sphinxcontrib-apidoc generates
+docs/build/
+docs/source/api/

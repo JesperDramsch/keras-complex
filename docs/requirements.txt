@@ -1,4 +1,5 @@
-tensorflow
-sphinx>=1.8
+myst-parser
+sphinx
+sphinx-rtd-theme
 sphinxcontrib-apidoc
 sphinxcontrib-bibtex
