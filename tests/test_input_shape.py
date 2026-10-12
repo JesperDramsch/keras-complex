@@ -141,3 +141,11 @@ class TestWarningsShownOnce(unittest.TestCase):
         for name, make_layer in cases.items():
             with self.subTest(name):
                 self.assertEqual(self.count_shown(make_layer), 1)
+
+    # Known trade-off, documented in utils._ignore_input_shape_warning: on
+    # Keras 3, filtering the input_shape warning resets the record of shown
+    # warnings. Should that change, this starts passing and unittest reports it.
+    @unittest.skipUnless(_KERAS_3, "only Keras 3 emits the input_shape warning")
+    @unittest.expectedFailure
+    def test_warning_shown_once_with_input_dim_on_keras_3(self):
+        self.assertEqual(self.count_shown(lambda: conn.ComplexDense(2, input_dim=4)), 1)

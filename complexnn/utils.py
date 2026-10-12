@@ -28,11 +28,16 @@ def _ignore_input_shape_warning(kwargs):
     The layers wrap their call to ``Layer.__init__(**kwargs)`` with it. The
     warning filters change only when the warning can fire: on Keras 3, and only
     when kwargs holds ``input_shape`` or ``input_dim``. Otherwise the block
-    does nothing. ``warnings.catch_warnings`` makes Python forget which
-    warnings it has already shown, so using it for every layer would show
-    those warnings again after each layer is built. When the filter does
-    apply, it changes the process-wide warning filters while it runs, like any
-    use of ``catch_warnings``, so it is not thread-safe.
+    does nothing.
+
+    Trade-off: ``warnings.catch_warnings`` makes Python forget which warnings
+    it has already shown. So on Keras 3, every layer built with
+    ``input_shape`` or ``input_dim`` lets warnings that normally show once per
+    place in the code show again. A filter installed once at import would avoid
+    that, but any ``warnings.simplefilter("always")`` set later would override
+    it and bring the input_shape warning back. While the filter applies it also
+    changes the process-wide filters, like any use of ``catch_warnings``, so it
+    is not thread-safe.
     """
     if not _KERAS_3 or not ("input_shape" in kwargs or "input_dim" in kwargs):
         yield
