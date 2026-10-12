@@ -146,7 +146,6 @@ class ComplexLayerNorm(Layer):
             super(ComplexLayerNorm, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        ndim = len(input_shape)
         dim = input_shape[self.axis]
         if dim is None:
             raise ValueError(

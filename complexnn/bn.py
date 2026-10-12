@@ -359,8 +359,6 @@ class ComplexBatchNormalization(Layer):
         self.gamma_off_constraint = constraints.get(gamma_off_constraint)
 
     def build(self, input_shape):
-        ndim = len(input_shape)
-
         dim = input_shape[self.axis]
         if dim is None:
             raise ValueError(

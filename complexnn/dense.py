@@ -180,11 +180,6 @@ class ComplexDense(Layer):
         self.built = True
 
     def call(self, inputs):
-        input_shape = K.shape(inputs)
-        input_dim = input_shape[-1] // 2
-        real_input = inputs[:, :input_dim]
-        imag_input = inputs[:, input_dim:]
-
         cat_kernels_4_real = K.concatenate(
             [self.real_kernel, -self.imag_kernel], axis=-1
         )
