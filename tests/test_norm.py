@@ -26,3 +26,20 @@ class TestComplexLayerNormConfig(unittest.TestCase):
         layer = conn.ComplexLayerNorm(gamma_diag_initializer="ones")
         clone = conn.ComplexLayerNorm.from_config(layer.get_config())
         self.assertIsInstance(clone.gamma_diag_initializer, tf.keras.initializers.Ones)
+
+
+class TestLayerNormalizationConfig(unittest.TestCase):
+    """LayerNormalization configs keep their initialisers and regularisers"""
+
+    def test_from_config(self):
+        layer = conn.LayerNormalization(
+            beta_init="ones",
+            gamma_init="zeros",
+            gamma_regularizer=tf.keras.regularizers.L2(0.01),
+        )
+        config = layer.get_config()
+        clone = conn.LayerNormalization.from_config(config)
+        self.assertEqual(clone.get_config(), config)
+        self.assertIsInstance(clone.beta_init, tf.keras.initializers.Ones)
+        self.assertIsInstance(clone.gamma_init, tf.keras.initializers.Zeros)
+        self.assertAlmostEqual(clone.gamma_regularizer.get_config()["l2"], 0.01)

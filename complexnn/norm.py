@@ -95,12 +95,10 @@ class LayerNormalization(Layer):
         config = {
             "epsilon": self.epsilon,
             "axis": self.axis,
-            "gamma_regularizer": self.gamma_regularizer.get_config()
-            if self.gamma_regularizer
-            else None,
-            "beta_regularizer": self.beta_regularizer.get_config()
-            if self.beta_regularizer
-            else None,
+            "beta_init": initializers.serialize(self.beta_init),
+            "gamma_init": initializers.serialize(self.gamma_init),
+            "gamma_regularizer": regularizers.serialize(self.gamma_regularizer),
+            "beta_regularizer": regularizers.serialize(self.beta_regularizer),
         }
         base_config = super(LayerNormalization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
