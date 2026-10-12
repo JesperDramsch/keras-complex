@@ -281,6 +281,16 @@ class ComplexInit(Initializer):
 
         return weight
 
+    def get_config(self):
+        return {
+            "nb_filters": self.nb_filters,
+            "kernel_size": self.kernel_size,
+            "input_dim": self.input_dim,
+            "weight_dim": self.weight_dim,
+            "criterion": self.criterion,
+            "seed": self.seed,
+        }
+
 
 class SqrtInit(Initializer):
     def __call__(self, shape, dtype=None):
