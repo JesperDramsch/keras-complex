@@ -13,6 +13,23 @@ from tensorflow.keras.utils import get_registered_name, get_registered_object
 # layer, so tests never share an instance.
 LAYERS = {
     "ComplexDense": ((8,), lambda: conn.ComplexDense(4)),
+    # A seeded Keras initialiser: Keras 2 warns when an unseeded one is called
+    # twice, and ComplexDense calls it for the real and the imaginary kernel.
+    "ComplexDense GlorotUniform": (
+        (8,),
+        lambda: conn.ComplexDense(
+            4, kernel_initializer=tf.keras.initializers.GlorotUniform(seed=1)
+        ),
+    ),
+    "ComplexDense ComplexInit": (
+        (8,),
+        lambda: conn.ComplexDense(
+            4,
+            kernel_initializer=conn.ComplexInit(
+                kernel_size=(4, 4), input_dim=4, weight_dim=2
+            ),
+        ),
+    ),
     "ComplexConv1D": ((10, 4), lambda: conn.ComplexConv1D(2, 3, padding="same")),
     "ComplexConv2D": ((6, 6, 4), lambda: conn.ComplexConv2D(2, 3, padding="same")),
     "ComplexConv2D normalize_weight": (

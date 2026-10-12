@@ -80,7 +80,9 @@ class ComplexDense(Layer):
         self.activation = activations.get(activation)
         self.use_bias = use_bias
         self.init_criterion = init_criterion
-        if kernel_initializer in {"complex"}:
+        # get_config stores any other initialiser as a dict, which a set
+        # membership test would try to hash, so compare with == instead.
+        if kernel_initializer == "complex":
             self.kernel_initializer = kernel_initializer
         else:
             self.kernel_initializer = initializers.get(kernel_initializer)
@@ -129,7 +131,7 @@ class ComplexDense(Layer):
         def init_w_imag(shape, dtype=None):
             return rng.normal(size=kernel_shape, loc=0, scale=s)  # .astype(dtype)
 
-        if self.kernel_initializer in {"complex"}:
+        if self.kernel_initializer == "complex":
             real_init = init_w_real
             imag_init = init_w_imag
         else:
@@ -198,7 +200,7 @@ class ComplexDense(Layer):
         return tuple(output_shape)
 
     def get_config(self):
-        if self.kernel_initializer in {"complex"}:
+        if self.kernel_initializer == "complex":
             ki = self.kernel_initializer
         else:
             ki = initializers.serialize(self.kernel_initializer)
