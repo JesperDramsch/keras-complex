@@ -154,8 +154,8 @@ class ComplexLayerNorm(Layer):
             self,
             input_shape,
             self.axis,
-            hint="Use the `axis` argument to choose the axis that holds the real "
-            "and imaginary parts.",
+            hint="Use `axis=-1` when the parts are on the last axis, or `axis=1` "
+            "when they are on axis 1 of an input of rank 2, 4 or 5.",
         )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 

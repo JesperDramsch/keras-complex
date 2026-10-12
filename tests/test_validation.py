@@ -1,7 +1,9 @@
 import unittest
 
-import complexnn as conn
+import numpy as np
 from tensorflow.keras.layers import Input
+
+import complexnn as conn
 
 # Part of every error message about the real and imaginary layout.
 LAYOUT_ERROR = "must be even and at least 2"
@@ -79,12 +81,21 @@ class TestComplexAxisValidation(unittest.TestCase):
         self.assertLayoutError(conn.ComplexBN(), (5,), "axis -1 has size 5")
         self.assertLayoutError(conn.ComplexBN(), (8, 8, 1), "axis -1 has size 1")
         self.assertLayoutError(
-            conn.ComplexBN(axis=1), (3, 8, 8), "axis 1 has size 3", "`axis` argument"
+            conn.ComplexBN(axis=1),
+            (3, 8, 8),
+            "axis 1 has size 3",
+            "`axis=1` when they are on axis 1 of an input of rank 2, 4 or 5",
         )
 
     def test_layer_normalization(self):
         self.assertLayoutError(conn.ComplexLayerNorm(), (3,), "axis -1 has size 3")
         self.assertLayoutError(conn.ComplexLayerNorm(), (8, 1), "axis -1 has size 1")
+        self.assertLayoutError(
+            conn.ComplexLayerNorm(axis=1),
+            (3, 8, 8),
+            "axis 1 has size 3",
+            "`axis=1` when they are on axis 1 of an input of rank 2, 4 or 5",
+        )
 
     def test_get_parts(self):
         for layer_class in (conn.GetReal, conn.GetImag, conn.GetAbs):
@@ -119,6 +130,26 @@ class TestValidComplexAxis(unittest.TestCase):
             with self.subTest(layer=type(layer).__name__):
                 outputs = layer(Input(shape=shape))
                 self.assertEqual(expected, tuple(outputs.shape))
+
+    def test_normalisation_supported_axes(self):
+        """The `axis` settings that the docs list for the normalisation layers run"""
+        rng = np.random.default_rng(15)
+        cases = [
+            (-1, (4, 6)),
+            (-1, (4, 5, 6)),
+            (-1, (4, 3, 3, 6)),
+            (-1, (4, 3, 3, 3, 6)),
+            (1, (4, 6)),
+            (1, (4, 6, 3, 3)),
+            (1, (4, 6, 3, 3, 3)),
+        ]
+        for layer_class in (conn.ComplexBN, conn.ComplexLayerNorm):
+            for axis, shape in cases:
+                with self.subTest(layer=layer_class.__name__, axis=axis, shape=shape):
+                    x = rng.normal(size=shape).astype("float32")
+                    outputs = np.asarray(layer_class(axis=axis)(x, training=True))
+                    self.assertEqual(shape, outputs.shape)
+                    self.assertTrue(np.all(np.isfinite(outputs)))
 
 
 if __name__ == "__main__":

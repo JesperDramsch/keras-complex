@@ -272,6 +272,8 @@ class ComplexBatchNormalization(Layer):
             For instance, after a `Conv2D` layer with
             `data_format="channels_first"`,
             set `axis=1` in `ComplexBatchNormalization`.
+            Only `axis=-1` and, for inputs of rank 2, 4 or 5,
+            `axis=1` are supported.
         momentum: Momentum for the moving statistics related to the real and
             imaginary parts.
         epsilon: Small float added to each of the variances related to the
@@ -363,8 +365,8 @@ class ComplexBatchNormalization(Layer):
             self,
             input_shape,
             self.axis,
-            hint="Use the `axis` argument to choose the axis that holds the real "
-            "and imaginary parts.",
+            hint="Use `axis=-1` when the parts are on the last axis, or `axis=1` "
+            "when they are on axis 1 of an input of rank 2, 4 or 5.",
         )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 

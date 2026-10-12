@@ -51,7 +51,7 @@ Inside a model, `GetReal`, `GetImag` and `GetAbs` return the real parts, the ima
 | `ComplexConv1D` | Always the last axis. It has no `data_format` argument and ignores the Keras image data format. |
 | `ComplexConv2D`, `ComplexConv3D` | The channel axis: the last axis, or axis 1 with `data_format="channels_first"`. When `data_format` is not given, the layers use `image_data_format` from the Keras config file, `~/.keras/keras.json`, which is `channels_last` if it is not set. Changing the image data format at runtime does not change them. |
 | `ComplexDense` | The last axis of its 2D input `(batch_size, features)`. |
-| `ComplexBatchNormalization`, `ComplexLayerNorm` | The axis given by their `axis` argument, the last axis by default. |
+| `ComplexBatchNormalization`, `ComplexLayerNorm` | The axis given by their `axis` argument. Two settings are supported: `axis=-1`, the default, for the last axis, and `axis=1` for inputs of rank 2, 4 or 5, such as `channels_first` images of shape `(batch, channels, rows, cols)`. |
 | `GetReal`, `GetImag`, `GetAbs` | The last axis, except for 4D and 5D inputs when `keras.backend.image_data_format()` returns `channels_first`, where they use axis 1. Unlike the convolutions, they follow a change of the image data format at runtime. |
 
 If your code changes the image data format at runtime, with `keras.backend.set_image_data_format()` or, in Keras 3, `keras.config.set_image_data_format()`, pass `data_format` to `ComplexConv2D` and `ComplexConv3D` explicitly, so that they use the same channel axis as `GetReal`, `GetImag` and `GetAbs`.
