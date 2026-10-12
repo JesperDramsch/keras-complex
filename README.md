@@ -83,7 +83,9 @@ To turn a complex NumPy array into this format:
 ```python
 import numpy as np
 
-z = np.random.randn(8, 3, 3, 2) + 1j * np.random.randn(8, 3, 3, 2)  # two complex channels
+z = np.random.randn(8, 3, 3, 2) + 1j * np.random.randn(
+    8, 3, 3, 2
+)  # two complex channels
 x = np.concatenate([z.real, z.imag], axis=-1)  # shape (8, 3, 3, 4)
 ```
 
