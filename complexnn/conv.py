@@ -9,13 +9,30 @@ from tensorflow.keras.layers import (
     InputSpec,
     Layer,
 )
-from tensorflow.python.keras.layers.convolutional import Conv
-from tensorflow.python.keras.utils import conv_utils
 
+from . import conv_utils
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
-from .fft import fft, fft2, ifft, ifft2
 from .init import ComplexIndependentFilters, ComplexInit
+from .utils import _ignore_input_shape_warning
+
+# WeightNorm_Conv still subclasses the Keras 2 convolution base from TensorFlow's
+# private copy of Keras. The class is broken on Keras 2 and Keras 3 and needs a
+# rebuild on the public Layer class; until then this is the one private import.
+# TensorFlow may drop the private copy, so `import complexnn` must not depend on
+# it: without it, only building a WeightNorm_Conv fails.
+try:
+    from tensorflow.python.keras.layers.convolutional import Conv
+except ImportError:
+
+    class Conv:
+        """Stand-in base class that makes building a WeightNorm_Conv fail"""
+
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "WeightNorm_Conv needs tensorflow.python.keras, TensorFlow's "
+                "private copy of Keras 2, which this TensorFlow does not provide."
+            )
 
 
 def conv1d_transpose(
@@ -277,7 +294,8 @@ class ComplexConv(Layer):
         epsilon=1e-7,
         **kwargs,
     ):
-        super(ComplexConv, self).__init__(**kwargs)
+        with _ignore_input_shape_warning(kwargs):
+            super(ComplexConv, self).__init__(**kwargs)
         self.rank = rank
         self.filters = filters
         self.kernel_size = conv_utils.normalize_tuple(kernel_size, rank, "kernel_size")
@@ -333,8 +351,7 @@ class ComplexConv(Layer):
             channel_axis = -1
         if input_shape[channel_axis] is None:
             raise ValueError(
-                "The channel dimension of the inputs "
-                "should be defined. Found `None`."
+                "The channel dimension of the inputs should be defined. Found `None`."
             )
         # Divide by 2 for real and complex input.
         input_dim = input_shape[channel_axis] // 2
@@ -423,11 +440,6 @@ class ComplexConv(Layer):
         self.built = True
 
     def call(self, inputs):
-        if self.data_format == "channels_first":
-            channel_axis = 1
-        else:
-            channel_axis = -1
-        input_dim = K.shape(inputs)[channel_axis] // 2
         if False and self.transposed:
             if self.rank == 1:
                 f_real = self.kernel[:, : self.filters, :]
@@ -545,24 +557,11 @@ class ComplexConv(Layer):
 
         # Performing complex convolution
 
-        f_real._keras_shape = self.kernel_shape
-        f_imag._keras_shape = self.kernel_shape
-
         cat_kernels_4_real = K.concatenate([f_real, -f_imag], axis=-2)
         cat_kernels_4_imag = K.concatenate([f_imag, f_real], axis=-2)
         cat_kernels_4_complex = K.concatenate(
             [cat_kernels_4_real, cat_kernels_4_imag], axis=-1
         )
-        if False and self.transposed:
-            cat_kernels_4_complex._keras_shape = self.kernel_size + (
-                2 * self.filters,
-                2 * input_dim,
-            )
-        else:
-            cat_kernels_4_complex._keras_shape = (
-                self.kernel_size + 2 * input_dim,
-                2 * self.filters,
-            )
 
         output = convFunc(inputs, cat_kernels_4_complex, **convArgs)
 
@@ -1106,8 +1105,7 @@ class WeightNorm_Conv(Conv):
             channel_axis = -1
         if input_shape[channel_axis] is None:
             raise ValueError(
-                "The channel dimension of the inputs "
-                "should be defined. Found `None`."
+                "The channel dimension of the inputs should be defined. Found `None`."
             )
         input_dim = input_shape[channel_axis]
         gamma_shape = (input_dim * self.filters,)
@@ -1127,8 +1125,7 @@ class WeightNorm_Conv(Conv):
             channel_axis = -1
         if input_shape[channel_axis] is None:
             raise ValueError(
-                "The channel dimension of the inputs "
-                "should be defined. Found `None`."
+                "The channel dimension of the inputs should be defined. Found `None`."
             )
         input_dim = input_shape[channel_axis]
         ker_shape = self.kernel_size + (input_dim, self.filters)
@@ -1143,7 +1140,6 @@ class WeightNorm_Conv(Conv):
             * normalized_weight
         )
         shaped_kernel = K.reshape(normalized_weight, ker_shape)
-        shaped_kernel._keras_shape = ker_shape
 
         convArgs = {
             "strides": self.strides[0] if self.rank == 1 else self.strides,

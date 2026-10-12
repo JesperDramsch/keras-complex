@@ -6,7 +6,6 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as KB
 import tensorflow.keras.layers as KL
-import tensorflow.keras.optimizers as KO
 
 #
 # FFT functions:

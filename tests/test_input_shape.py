@@ -1,0 +1,156 @@
+import unittest
+import warnings
+
+import tensorflow as tf
+
+import complexnn as conn
+from complexnn.utils import _KERAS_3, _ignore_input_shape_warning
+
+# Keras 3 warns with this message when a layer receives input_shape or input_dim.
+# The filter in complexnn/utils.py matches this exact wording, so only
+# TestIgnoreInputShapeWarning, which checks that filter, uses it.
+INPUT_SHAPE_WARNING = "Do not pass an `input_shape`/`input_dim` argument"
+
+
+def input_shape_warnings(make_layer):
+    """Return every warning that make_layer() raises about input_shape or input_dim
+
+    The check does not depend on Keras's wording. If a Keras release rewords
+    its warning, the filter stops matching and this check sees the warning.
+    """
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        make_layer()
+    messages = [str(w.message) for w in caught]
+    return [m for m in messages if "input_shape" in m or "input_dim" in m]
+
+
+class TestInputShapeArgument(unittest.TestCase):
+    """Layers accept input_shape and input_dim without Keras 3's warning"""
+
+    cases = {
+        "ComplexDense input_dim": (lambda: conn.ComplexDense(8, input_dim=16), (16,)),
+        "ComplexDense input_shape": (
+            lambda: conn.ComplexDense(8, input_shape=(16,)),
+            (16,),
+        ),
+        "ComplexConv1D": (
+            lambda: conn.ComplexConv1D(2, 3, input_shape=(16, 4)),
+            (16, 4),
+        ),
+        "ComplexConv2D": (
+            lambda: conn.ComplexConv2D(2, 3, input_shape=(8, 8, 4)),
+            (8, 8, 4),
+        ),
+        "ComplexConv3D": (
+            lambda: conn.ComplexConv3D(2, 3, input_shape=(4, 4, 4, 2)),
+            (4, 4, 4, 2),
+        ),
+        "ComplexBN": (lambda: conn.ComplexBN(input_shape=(16,)), (16,)),
+        "ComplexLayerNorm": (lambda: conn.ComplexLayerNorm(input_shape=(16,)), (16,)),
+        "LayerNormalization": (
+            lambda: conn.LayerNormalization(input_shape=(16,)),
+            (16,),
+        ),
+    }
+
+    def test_no_warning(self):
+        for name, (make_layer, _) in self.cases.items():
+            with self.subTest(name):
+                self.assertEqual(input_shape_warnings(make_layer), [])
+
+    def test_sequential_uses_the_shape(self):
+        for name, (make_layer, shape) in self.cases.items():
+            with self.subTest(name):
+                model = tf.keras.Sequential([make_layer()])
+                self.assertEqual(model.input_shape, (None, *shape))
+
+
+class TestIgnoreInputShapeWarning(unittest.TestCase):
+    """The helper filters only the input_shape warning, and only when it can fire"""
+
+    def warnings_shown(self, kwargs):
+        """Warn inside and after the helper's block, and return what was shown"""
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            with _ignore_input_shape_warning(kwargs):
+                warnings.warn(
+                    f"{INPUT_SHAPE_WARNING} to a layer.", UserWarning, stacklevel=1
+                )
+                warnings.warn("Another warning.", UserWarning, stacklevel=1)
+            warnings.warn(
+                f"{INPUT_SHAPE_WARNING} outside the block.", UserWarning, stacklevel=1
+            )
+        return [str(w.message) for w in caught]
+
+    @unittest.skipUnless(_KERAS_3, "only Keras 3 emits the input_shape warning")
+    def test_hides_only_the_input_shape_warning(self):
+        for kwargs in ({"input_shape": (16,)}, {"input_dim": 16}):
+            with self.subTest(kwargs):
+                self.assertEqual(
+                    self.warnings_shown(kwargs),
+                    ["Another warning.", f"{INPUT_SHAPE_WARNING} outside the block."],
+                )
+
+    def test_filters_nothing_when_the_warning_cannot_fire(self):
+        everything = [
+            f"{INPUT_SHAPE_WARNING} to a layer.",
+            "Another warning.",
+            f"{INPUT_SHAPE_WARNING} outside the block.",
+        ]
+        cases = {"no input_shape": {"name": "layer"}}
+        if not _KERAS_3:
+            cases["Keras 2 input_shape"] = {"input_shape": (16,)}
+        for name, kwargs in cases.items():
+            with self.subTest(name):
+                self.assertEqual(self.warnings_shown(kwargs), everything)
+
+
+REPEATED_WARNING = "A warning from one place in the code."
+
+
+def warn_from_one_place():
+    # stacklevel=1 attributes the warning to this line, the one place it comes from.
+    warnings.warn(REPEATED_WARNING, UserWarning, stacklevel=1)
+
+
+class TestWarningsShownOnce(unittest.TestCase):
+    """Building a layer does not make a warning that was shown once show again
+
+    ``warnings.catch_warnings`` resets the record Python keeps of warnings it
+    has shown, so the layers must not enter it when the input_shape warning
+    cannot fire.
+    """
+
+    def count_shown(self, make_layer):
+        """Warn from one place three times, building a layer after each warning"""
+        with warnings.catch_warnings(record=True) as caught:
+            # The default action shows a warning once per place in the code.
+            warnings.simplefilter("default")
+            for _ in range(3):
+                warn_from_one_place()
+                make_layer()
+        return [str(w.message) for w in caught].count(REPEATED_WARNING)
+
+    def test_warning_shown_once(self):
+        cases = {
+            "ComplexDense": lambda: conn.ComplexDense(2),
+            "ComplexConv2D": lambda: conn.ComplexConv2D(2, 3),
+            "ComplexBN": lambda: conn.ComplexBN(),
+            "ComplexLayerNorm": lambda: conn.ComplexLayerNorm(),
+            "LayerNormalization": lambda: conn.LayerNormalization(),
+        }
+        if not _KERAS_3:
+            # Keras 2 never warns about input_dim, so the filters stay untouched.
+            cases["ComplexDense input_dim"] = lambda: conn.ComplexDense(2, input_dim=4)
+        for name, make_layer in cases.items():
+            with self.subTest(name):
+                self.assertEqual(self.count_shown(make_layer), 1)
+
+    # Known trade-off, documented in utils._ignore_input_shape_warning: on
+    # Keras 3, filtering the input_shape warning resets the record of shown
+    # warnings. Should that change, this starts passing and unittest reports it.
+    @unittest.skipUnless(_KERAS_3, "only Keras 3 emits the input_shape warning")
+    @unittest.expectedFailure
+    def test_warning_shown_once_with_input_dim_on_keras_3(self):
+        self.assertEqual(self.count_shown(lambda: conn.ComplexDense(2, input_dim=4)), 1)
