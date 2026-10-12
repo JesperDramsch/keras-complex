@@ -3,35 +3,23 @@
 
 ## Status
 
-keras-complex is being updated for Keras 3. The current release, 0.2.3, does not work with TensorFlow 2.16 or later, because TensorFlow now ships Keras 3 (see [#23](https://github.com/JesperDramsch/keras-complex/issues/23)). Its package metadata is also invalid, so pip 24.1 and later skip it and install the older 0.1.3 instead. Version 0.3.0 will fix both.
+keras-complex works with current TensorFlow and Keras 3. It is maintained as time allows: it gets fixes when TensorFlow or Keras change, and issues and pull requests are welcome. New features are not planned.
 
-Until then, install from GitHub and use TensorFlow 2.15, or keep a newer TensorFlow and add `tf-keras`:
+CI tests every change against the latest TensorFlow with Keras 3 on Python 3.11 to 3.13, and against Keras 2 through TensorFlow 2.15 and through `tf-keras`.
 
-```
-pip install "git+https://github.com/JesperDramsch/keras-complex" tf-keras
-```
-
-With `tf-keras`, set `TF_USE_LEGACY_KERAS=1` before TensorFlow is first imported.
+Not working in this release: spectral pooling, `spectral_parametrization=True`, `WeightNorm_Conv`, `SqrtInit`, the `fft` module, and training `ComplexConv1D` with `transposed=True`. They fail on Keras 2 as well, so they were already broken before the Keras 3 update.
 
 [Complex-valued convolutions](https://en.wikipedia.org/wiki/Convolution#Domain_of_definition) could provide some interesting results in signal processing-based deep learning. A simple(-ish) idea is including explicit phase information of time series in neural networks. This code enables complex-valued convolution in convolutional neural networks in [keras](https://keras.io) with the [TensorFlow](https://tensorflow.org/) backend. This makes the network modular and interoperable with standard keras layers and operations.
 
-This code is very much in **Alpha**. Please consider helping out improving the code to advance together. This repository is based on the code which reproduces experiments presented in the paper [Deep Complex Networks](https://arxiv.org/abs/1705.09792). It is a port to Keras with Tensorflow-backend.
+This repository is based on the code which reproduces experiments presented in the paper [Deep Complex Networks](https://arxiv.org/abs/1705.09792). It is a port to Keras with Tensorflow-backend.
 
 Requirements
 ------------
 
-- numpy
-- scipy
-- scikit-learn
-- tensorflow 2.X
+- Python 3.11 or later
+- TensorFlow 2.15 or later
 
-Install requirements for computer vision experiments with pip:
-
-```
-pip install -r requirements.txt
-```
-
-Depending on your Python installation you might want to use anaconda or venv or other tools.
+Keras 3 (TensorFlow 2.16 and later) and Keras 2 both work. To use Keras 2 with a newer TensorFlow, install `tf-keras` and set `TF_USE_LEGACY_KERAS=1` before TensorFlow is first imported.
 
 
 Installation
