@@ -294,7 +294,7 @@ class ComplexInit(Initializer):
 @register_keras_serializable(package="complexnn")
 class SqrtInit(Initializer):
     def __call__(self, shape, dtype=None):
-        return K.constant(1 / K.sqrt(2), shape=shape, dtype=dtype)
+        return K.constant(1 / np.sqrt(2), shape=shape, dtype=dtype)
 
 
 # Aliases:

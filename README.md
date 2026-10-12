@@ -7,7 +7,7 @@ keras-complex works with current TensorFlow and Keras 3. It is maintained as tim
 
 CI tests every change against the latest TensorFlow with Keras 3 on Python 3.11 to 3.13, and against Keras 2 through TensorFlow 2.15 and through `tf-keras`.
 
-Not working in this release: spectral pooling, `spectral_parametrization=True`, `WeightNorm_Conv`, `SqrtInit`, the `fft` module, and training `ComplexConv1D` with `transposed=True`. They fail on Keras 2 as well, so they were already broken before the Keras 3 update.
+Not working in this release: spectral pooling, `spectral_parametrization=True`, `WeightNorm_Conv`, the `fft` module, and training `ComplexConv1D` with `transposed=True`. They fail on Keras 2 as well, so they were already broken before the Keras 3 update.
 
 [Complex-valued convolutions](https://en.wikipedia.org/wiki/Convolution#Domain_of_definition) could provide some interesting results in signal processing-based deep learning. A simple(-ish) idea is including explicit phase information of time series in neural networks. This code enables complex-valued convolution in convolutional neural networks in [keras](https://keras.io) with the [TensorFlow](https://tensorflow.org/) backend. This makes the network modular and interoperable with standard keras layers and operations.
 
