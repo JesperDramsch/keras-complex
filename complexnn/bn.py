@@ -10,6 +10,7 @@ import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.keras.utils import register_keras_serializable
 
 
 def sqrt_init(shape, dtype=None):
@@ -254,6 +255,7 @@ def ComplexBN(
             return input_centred
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexBatchNormalization(Layer):
     """Complex version of the real domain
     Batch normalization layer (Ioffe and Szegedy, 2014).

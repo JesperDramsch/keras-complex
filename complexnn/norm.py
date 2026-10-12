@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.keras.utils import register_keras_serializable
 
 from .bn import ComplexBN as complex_normalization
 from .bn import sanitizedInitGet, sanitizedInitSer, sqrt_init
@@ -45,6 +46,7 @@ def layernorm(x, axis, epsilon, gamma, beta):
     return x_LN
 
 
+@register_keras_serializable(package="complexnn")
 class LayerNormalization(Layer):
     def __init__(
         self,
@@ -104,6 +106,7 @@ class LayerNormalization(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexLayerNorm(Layer):
     def __init__(
         self,

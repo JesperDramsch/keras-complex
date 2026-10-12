@@ -6,10 +6,12 @@ from numpy.random import RandomState
 from tensorflow.keras import activations, constraints, initializers, regularizers
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.keras.utils import register_keras_serializable
 
 from .utils import _compute_fans
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexDense(Layer):
     """Regular complex densely-connected NN layer.
     `Dense` implements the operation:

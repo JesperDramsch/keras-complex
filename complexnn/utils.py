@@ -4,6 +4,7 @@
 import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Lambda, Layer
+from tensorflow.keras.utils import register_keras_serializable
 
 #
 # GetReal/GetImag Lambda layer Implementation
@@ -108,6 +109,7 @@ def _compute_fans(shape, data_format="channels_last"):
     return fan_in, fan_out
 
 
+@register_keras_serializable(package="complexnn")
 class GetReal(Layer):
     def call(self, inputs):
         return get_realpart(inputs)
@@ -116,6 +118,7 @@ class GetReal(Layer):
         return getpart_output_shape(input_shape)
 
 
+@register_keras_serializable(package="complexnn")
 class GetImag(Layer):
     def call(self, inputs):
         return get_imagpart(inputs)
@@ -124,6 +127,7 @@ class GetImag(Layer):
         return getpart_output_shape(input_shape)
 
 
+@register_keras_serializable(package="complexnn")
 class GetAbs(Layer):
     def call(self, inputs):
         return get_abs(inputs)

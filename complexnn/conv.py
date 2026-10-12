@@ -9,6 +9,7 @@ from tensorflow.keras.layers import (
     InputSpec,
     Layer,
 )
+from tensorflow.keras.utils import register_keras_serializable
 from tensorflow.python.keras.layers.convolutional import Conv
 from tensorflow.python.keras.utils import conv_utils
 
@@ -179,6 +180,7 @@ def sanitizedInitSer(init):
         return initializers.serialize(init)
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv(Layer):
     """Abstract nD complex convolution layer.
 
@@ -641,6 +643,7 @@ class ComplexConv(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv1D(ComplexConv):
     """1D complex convolution layer.
     This layer creates a complex convolution kernel that is convolved
@@ -774,6 +777,7 @@ class ComplexConv1D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv2D(ComplexConv):
     """2D Complex convolution layer (e.g. spatial convolution over images).
     This layer creates a complex convolution kernel that is convolved
@@ -921,6 +925,7 @@ class ComplexConv2D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class ComplexConv3D(ComplexConv):
     """3D convolution layer (e.g. spatial convolution over volumes).
     This layer creates a complex convolution kernel that is convolved
@@ -1072,6 +1077,7 @@ class ComplexConv3D(ComplexConv):
         return config
 
 
+@register_keras_serializable(package="complexnn")
 class WeightNorm_Conv(Conv):
     """WeightNorm_Conv"""
 
