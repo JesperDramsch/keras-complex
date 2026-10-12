@@ -281,7 +281,7 @@ class ComplexConv(Layer):
         epsilon=1e-7,
         **kwargs,
     ):
-        with _ignore_input_shape_warning():
+        with _ignore_input_shape_warning(kwargs):
             super(ComplexConv, self).__init__(**kwargs)
         self.rank = rank
         self.filters = filters

@@ -73,7 +73,7 @@ class ComplexDense(Layer):
     ):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
-        with _ignore_input_shape_warning():
+        with _ignore_input_shape_warning(kwargs):
             super(ComplexDense, self).__init__(**kwargs)
         self.units = units
         self.activation = activations.get(activation)

@@ -322,7 +322,7 @@ class ComplexBatchNormalization(Layer):
         gamma_off_constraint=None,
         **kwargs,
     ):
-        with _ignore_input_shape_warning():
+        with _ignore_input_shape_warning(kwargs):
             super(ComplexBatchNormalization, self).__init__(**kwargs)
         self.supports_masking = True
         self.axis = axis

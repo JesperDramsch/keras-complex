@@ -64,7 +64,7 @@ class LayerNormalization(Layer):
         self.gamma_regularizer = regularizers.get(gamma_regularizer)
         self.beta_regularizer = regularizers.get(beta_regularizer)
 
-        with _ignore_input_shape_warning():
+        with _ignore_input_shape_warning(kwargs):
             super(LayerNormalization, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -139,7 +139,7 @@ class ComplexLayerNorm(Layer):
         self.beta_constraint = constraints.get(beta_constraint)
         self.gamma_diag_constraint = constraints.get(gamma_diag_constraint)
         self.gamma_off_constraint = constraints.get(gamma_off_constraint)
-        with _ignore_input_shape_warning():
+        with _ignore_input_shape_warning(kwargs):
             super(ComplexLayerNorm, self).__init__(**kwargs)
 
     def build(self, input_shape):

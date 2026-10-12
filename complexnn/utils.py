@@ -6,6 +6,7 @@ import re
 import warnings
 
 import numpy as np
+import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Layer
 
@@ -15,16 +16,27 @@ from tensorflow.keras.layers import Layer
 # turns them into an input layer, so for these layers the warning is noise.
 _INPUT_SHAPE_WARNING = re.escape("Do not pass an `input_shape`/`input_dim` argument")
 
+# Only Keras 3 emits that warning. Keras 3 has `keras.version()`; Keras 2 and
+# tf-keras do not.
+_KERAS_3 = hasattr(tf.keras, "version") and int(tf.keras.version().split(".")[0]) >= 3
+
 
 @contextlib.contextmanager
-def _ignore_input_shape_warning():
+def _ignore_input_shape_warning(kwargs):
     """Ignore Keras 3's input_shape/input_dim warning inside the block.
 
-    The layers wrap their call to ``Layer.__init__`` with it. Keras 2 never
-    emits the warning, so there the block changes nothing. Like any use of
-    ``warnings.catch_warnings``, it changes the process-wide warning filters
-    while it runs.
+    The layers wrap their call to ``Layer.__init__(**kwargs)`` with it. The
+    warning filters change only when the warning can fire: on Keras 3, and only
+    when kwargs holds ``input_shape`` or ``input_dim``. Otherwise the block
+    does nothing. ``warnings.catch_warnings`` makes Python forget which
+    warnings it has already shown, so using it for every layer would show
+    those warnings again after each layer is built. When the filter does
+    apply, it changes the process-wide warning filters while it runs, like any
+    use of ``catch_warnings``, so it is not thread-safe.
     """
+    if not _KERAS_3 or not ("input_shape" in kwargs or "input_dim" in kwargs):
+        yield
+        return
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore", message=_INPUT_SHAPE_WARNING, category=UserWarning
