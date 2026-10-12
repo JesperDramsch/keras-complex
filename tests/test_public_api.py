@@ -1,9 +1,8 @@
 import ast
-import importlib
+import subprocess
 import sys
 import unittest
 from pathlib import Path
-from unittest import mock
 
 import complexnn
 
@@ -62,17 +61,31 @@ class TestNoKerasShapeWrites(unittest.TestCase):
 class TestWithoutPrivateConv(unittest.TestCase):
     """`import complexnn` works if TensorFlow drops its private copy of Keras 2"""
 
+    # Runs in a child process: importing complexnn a second time in this process
+    # would leave Keras's global registry of serialisable classes pointing at
+    # the throwaway copies, and break later tests that load models.
+    # TensorFlow is imported before the module is blocked, because TensorFlow's
+    # own import needs it. A None entry makes every later import of it fail.
+    CODE = f"""
+import sys
+import tensorflow
+sys.modules[{PRIVATE_CONV!r}] = None
+import complexnn
+complexnn.ComplexConv2D(2, 3)
+try:
+    complexnn.WeightNorm_Conv(rank=2, filters=2, kernel_size=3)
+except ImportError as err:
+    assert "WeightNorm_Conv" in str(err), err
+else:
+    raise SystemExit("WeightNorm_Conv did not raise ImportError")
+"""
+
     def test_import_without_private_conv_module(self):
-        # patch.dict restores sys.modules, and so the original complexnn, on exit.
-        with mock.patch.dict(sys.modules):
-            for name in list(sys.modules):
-                if name == "complexnn" or name.startswith("complexnn."):
-                    del sys.modules[name]
-            # A None entry makes every import of the module raise ImportError.
-            sys.modules[PRIVATE_CONV] = None
-            package = importlib.import_module("complexnn")
-            self.assertIsNot(package, complexnn)
-            package.ComplexConv2D(2, 3)
-            with self.assertRaisesRegex(ImportError, "WeightNorm_Conv"):
-                package.WeightNorm_Conv(rank=2, filters=2, kernel_size=3)
-        self.assertIs(sys.modules["complexnn"], complexnn)
+        repo_root = Path(complexnn.__file__).parent.parent
+        result = subprocess.run(
+            [sys.executable, "-c", self.CODE],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
