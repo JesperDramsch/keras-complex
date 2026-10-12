@@ -50,3 +50,7 @@ class TestPublicNamespace(unittest.TestCase):
         exec("from complexnn import *", namespace)
         del namespace["__builtins__"]
         self.assertEqual(set(namespace), PUBLIC_NAMES)
+
+    def test_all(self):
+        """__all__ lists each public name once"""
+        self.assertCountEqual(complexnn.__all__, PUBLIC_NAMES)
