@@ -10,9 +10,16 @@ import tensorflow as tf
 from tensorflow.keras.utils import get_registered_name, get_registered_object
 
 # Every working layer, with an input shape it accepts. Each entry builds a new
-# layer, so tests never share an instance.
+# layer, so tests never share an instance. Layers that take arguments set some
+# of them away from their defaults: a value that from_config does not restore
+# then changes the config, and a lost argument that affects the output
+# (activation, strides, dilation_rate, epsilon) changes the output. Arguments
+# missing from the config altogether are caught by TestConfigCompleteness.
 LAYERS = {
-    "ComplexDense": ((8,), lambda: conn.ComplexDense(4)),
+    "ComplexDense": (
+        (8,),
+        lambda: conn.ComplexDense(4, activation="tanh", init_criterion="glorot"),
+    ),
     # A seeded Keras initialiser: Keras 2 warns when an unseeded one is called
     # twice, and ComplexDense calls it for the real and the imaginary kernel.
     "ComplexDense GlorotUniform": (
@@ -30,22 +37,39 @@ LAYERS = {
             ),
         ),
     ),
-    "ComplexConv1D": ((10, 4), lambda: conn.ComplexConv1D(2, 3, padding="same")),
-    "ComplexConv2D": ((6, 6, 4), lambda: conn.ComplexConv2D(2, 3, padding="same")),
+    "ComplexConv1D": (
+        (10, 4),
+        lambda: conn.ComplexConv1D(
+            2, 3, padding="same", dilation_rate=2, activation="tanh"
+        ),
+    ),
+    "ComplexConv2D": (
+        (6, 6, 4),
+        lambda: conn.ComplexConv2D(
+            2, 3, strides=2, padding="same", init_criterion="glorot"
+        ),
+    ),
     "ComplexConv2D normalize_weight": (
         (6, 6, 4),
-        lambda: conn.ComplexConv2D(2, 3, padding="same", normalize_weight=True),
+        lambda: conn.ComplexConv2D(
+            2, 3, padding="same", normalize_weight=True, epsilon=1e-2
+        ),
     ),
     "ComplexConv2D transposed": (
         (6, 6, 4),
         lambda: conn.ComplexConv2D(1, 3, strides=2, padding="same", transposed=True),
     ),
-    "ComplexConv3D": ((4, 4, 4, 4), lambda: conn.ComplexConv3D(2, 3, padding="same")),
-    "ComplexBN": ((4, 4, 8), lambda: conn.ComplexBN()),
+    "ComplexConv3D": (
+        (4, 4, 4, 4),
+        lambda: conn.ComplexConv3D(
+            2, 3, padding="same", dilation_rate=2, use_bias=False
+        ),
+    ),
+    "ComplexBN": ((4, 4, 8), lambda: conn.ComplexBN(epsilon=1e-2, momentum=0.5)),
     # On a 2D input both layer norms reduce over no axes and return beta, so
     # they get inputs with a feature axis on which the output depends on gamma.
-    "ComplexLayerNorm": ((4, 4, 8), lambda: conn.ComplexLayerNorm()),
-    "LayerNormalization": ((4, 8), lambda: conn.LayerNormalization()),
+    "ComplexLayerNorm": ((4, 4, 8), lambda: conn.ComplexLayerNorm(epsilon=1e-2)),
+    "LayerNormalization": ((4, 8), lambda: conn.LayerNormalization(epsilon=1e-2)),
     "GetReal": ((8,), lambda: conn.GetReal()),
     "GetImag": ((4, 4, 8), lambda: conn.GetImag()),
     "GetAbs": ((8,), lambda: conn.GetAbs()),
@@ -82,6 +106,49 @@ class TestLayerConfig(unittest.TestCase):
                 np.testing.assert_allclose(
                     np.asarray(clone(x)), np.asarray(layer(x)), rtol=1e-6, atol=1e-6
                 )
+
+
+def init_parameters(cls):
+    """Named __init__ arguments of cls and of the complexnn classes it passes them to"""
+    names = set()
+    for klass in cls.__mro__:
+        if "__init__" in vars(klass) and klass.__module__.startswith("complexnn."):
+            for param in inspect.signature(klass.__init__).parameters.values():
+                if param.name != "self" and param.kind not in (
+                    param.VAR_POSITIONAL,
+                    param.VAR_KEYWORD,
+                ):
+                    names.add(param.name)
+    return names
+
+
+# Arguments that get_config leaves out. ComplexConv1D/2D/3D pass rank to
+# ComplexConv themselves, and ComplexConv1D also data_format, so the config
+# must not repeat them. They accept seed but never use it, so there is
+# nothing to store yet.
+NOT_IN_CONFIG = {
+    conn.ComplexConv1D: {"rank", "data_format", "seed"},
+    conn.ComplexConv2D: {"rank", "seed"},
+    conn.ComplexConv3D: {"rank", "seed"},
+}
+
+
+class TestConfigCompleteness(unittest.TestCase):
+    """get_config stores every argument that __init__ takes"""
+
+    def test_every_argument_in_config(self):
+        checked = set()
+        for _, make_layer in LAYERS.values():
+            layer = make_layer()
+            cls = type(layer)
+            if cls in checked:
+                continue
+            checked.add(cls)
+            with self.subTest(cls.__name__):
+                missing = init_parameters(cls) - set(layer.get_config())
+                # assertEqual rather than a subset check, so the allow-list has
+                # to shrink once a gap is closed.
+                self.assertEqual(missing, NOT_IN_CONFIG.get(cls, set()))
 
 
 class TestRegistration(unittest.TestCase):
