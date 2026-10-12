@@ -768,6 +768,8 @@ class ComplexConv1D(ComplexConv):
     def get_config(self):
         config = super(ComplexConv1D, self).get_config()
         config.pop("rank")
+        # __init__ always passes data_format="channels_last" to ComplexConv.
+        config.pop("data_format")
         return config
 
 

@@ -56,3 +56,15 @@ class TestConvMethods(unittest.TestCase):
         true = (None, 128, 128, 4)
         calc = model.output_shape
         self.assertEqual(true, calc)
+
+
+class TestConvConfig(unittest.TestCase):
+    """Conv layer configs rebuild the same layer"""
+
+    def test_conv1d_from_config(self):
+        """ComplexConv1D sets data_format itself, so its config must not repeat it"""
+        layer = conn.ComplexConv1D(filters=2, kernel_size=3, padding="same")
+        config = layer.get_config()
+        clone = conn.ComplexConv1D.from_config(config)
+        self.assertEqual(clone.get_config(), config)
+        self.assertEqual(clone.data_format, "channels_last")
