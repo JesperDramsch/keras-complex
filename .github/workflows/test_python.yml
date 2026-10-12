@@ -55,6 +55,14 @@ jobs:
       - name: Install
         run: uv pip install -e . pytest ${{ matrix.packages }}
       - name: Versions
-        run: python -c "import tensorflow as tf; print('tensorflow', tf.__version__, 'keras', getattr(tf.keras, '__version__', 'unknown'))"
+        shell: python
+        run: |
+          from importlib import metadata
+
+          for package in ("tensorflow", "keras", "tf-keras"):
+              try:
+                  print(package, metadata.version(package))
+              except metadata.PackageNotFoundError:
+                  print(package, "not installed")
       - name: Test
         run: pytest
