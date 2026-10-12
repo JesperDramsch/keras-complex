@@ -37,6 +37,25 @@ jobs:
           python -m pip install dist/*.whl
           python -c "import complexnn"
 
+  # Build the documentation the way Read the Docs does: install the package
+  # and the docs requirements. -W turns every Sphinx warning into an error.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.12"
+      - name: Build the documentation
+        env:
+          TF_CPP_MIN_LOG_LEVEL: "3"
+        run: >-
+          uv run --no-project
+          --with-requirements docs/requirements.txt --with-editable .
+          sphinx-build -W --keep-going -b html docs/source docs/build/html
+
   test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
