@@ -1,7 +1,8 @@
 import unittest
 
-import complexnn as conn
 import numpy as np
+
+import complexnn as conn
 
 
 def make_initializers():

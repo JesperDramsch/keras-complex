@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import numpy as np
 from numpy.random import RandomState
@@ -87,7 +86,7 @@ class ComplexDense(Layer):
         if "input_shape" not in kwargs and "input_dim" in kwargs:
             kwargs["input_shape"] = (kwargs.pop("input_dim"),)
         with _ignore_input_shape_warning(kwargs):
-            super(ComplexDense, self).__init__(**kwargs)
+            super().__init__(**kwargs)
         self.units = units
         self.activation = activations.get(activation)
         self.use_bias = use_bias
@@ -180,11 +179,6 @@ class ComplexDense(Layer):
         self.built = True
 
     def call(self, inputs):
-        input_shape = K.shape(inputs)
-        input_dim = input_shape[-1] // 2
-        real_input = inputs[:, :input_dim]
-        imag_input = inputs[:, input_dim:]
-
         cat_kernels_4_real = K.concatenate(
             [self.real_kernel, -self.imag_kernel], axis=-1
         )
@@ -230,5 +224,5 @@ class ComplexDense(Layer):
             "bias_constraint": constraints.serialize(self.bias_constraint),
             "seed": self.seed,
         }
-        base_config = super(ComplexDense, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))

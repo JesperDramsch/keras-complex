@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # Implementation of Layer Normalization and Complex Layer Normalization
 
@@ -67,7 +66,7 @@ class LayerNormalization(Layer):
         self.beta_regularizer = regularizers.get(beta_regularizer)
 
         with _ignore_input_shape_warning(kwargs):
-            super(LayerNormalization, self).__init__(**kwargs)
+            super().__init__(**kwargs)
 
     def build(self, input_shape):
         self.input_spec = InputSpec(
@@ -79,13 +78,13 @@ class LayerNormalization(Layer):
             shape=shape,
             initializer=self.gamma_init,
             regularizer=self.gamma_regularizer,
-            name="{}_gamma".format(self.name),
+            name=f"{self.name}_gamma",
         )
         self.beta = self.add_weight(
             shape=shape,
             initializer=self.beta_init,
             regularizer=self.beta_regularizer,
-            name="{}_beta".format(self.name),
+            name=f"{self.name}_beta",
         )
 
         self.built = True
@@ -103,7 +102,7 @@ class LayerNormalization(Layer):
             "gamma_regularizer": regularizers.serialize(self.gamma_regularizer),
             "beta_regularizer": regularizers.serialize(self.beta_regularizer),
         }
-        base_config = super(LayerNormalization, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
@@ -143,10 +142,9 @@ class ComplexLayerNorm(Layer):
         self.gamma_diag_constraint = constraints.get(gamma_diag_constraint)
         self.gamma_off_constraint = constraints.get(gamma_off_constraint)
         with _ignore_input_shape_warning(kwargs):
-            super(ComplexLayerNorm, self).__init__(**kwargs)
+            super().__init__(**kwargs)
 
     def build(self, input_shape):
-        ndim = len(input_shape)
         dim = input_shape[self.axis]
         if dim is None:
             raise ValueError(
@@ -301,5 +299,5 @@ class ComplexLayerNorm(Layer):
             "gamma_diag_constraint": constraints.serialize(self.gamma_diag_constraint),
             "gamma_off_constraint": constraints.serialize(self.gamma_off_constraint),
         }
-        base_config = super(ComplexLayerNorm, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))

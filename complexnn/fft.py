@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # import tensorflow.keras.engine as KE
 import numpy as np

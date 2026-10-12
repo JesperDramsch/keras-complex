@@ -1,0 +1,33 @@
+# Checked monthly, with at most one grouped pull request per ecosystem.
+# For now only github-actions opens any: see the comment on the pip entry.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # pyproject.toml and docs/requirements.txt only set lower bounds, and there is
+  # no lockfile. increase-if-necessary leaves a requirement unchanged while it
+  # allows the new release, and a lower bound allows every release, so this
+  # entry opens no version-update pull requests for now. It takes effect once a
+  # pin or an upper bound is added, and such a pull request may raise the lower
+  # bound too: tensorflow>=2.15 must stay, because TensorFlow 2.15 is how
+  # Keras 2 users run this package.
+  - package-ecosystem: pip
+    directories:
+      - /
+      - /docs
+    schedule:
+      interval: monthly
+    versioning-strategy: increase-if-necessary
+    commit-message:
+      prefix: build
+    groups:
+      python:
+        patterns: ["*"]

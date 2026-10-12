@@ -5,10 +5,11 @@ import tempfile
 import unittest
 import warnings
 
-import complexnn as conn
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.utils import get_registered_name, get_registered_object
+
+import complexnn as conn
 
 # Every working layer, with an input shape it accepts. Each entry builds a new
 # layer, so tests never share an instance. Layers that take arguments set some

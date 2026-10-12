@@ -49,3 +49,24 @@ bugtracker = "https://github.com/JesperDramsch/keras-complex/issues"
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "docs*"]
+
+# ruff takes its target Python version from requires-python above.
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# List the rules explicitly: newer ruff releases enable a much larger default set,
+# and the result should not change when ruff is updated.
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "UP", # pyupgrade
+    "B",  # flake8-bugbear
+]
+ignore = [
+    # ruff format already wraps code at 88 columns. The lines it leaves long are
+    # prose in strings and comments, which read better unbroken.
+    "E501",
+]

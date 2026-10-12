@@ -1,4 +1,5 @@
-# Read-only checks for now; formatting and linting hooks come with the tooling update.
+# Read-only checks first, then ruff lints (fixing what it safely can) and formats
+# the Python files with the settings in pyproject.toml.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -7,3 +8,12 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
+  # The lint job in .github/workflows/test_python.yml reads this rev, so keep it
+  # on the line directly below the repo line.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.0
+    hooks:
+      # Lint before formatting, as ruff recommends when fixes are on.
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
