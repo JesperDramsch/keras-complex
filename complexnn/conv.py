@@ -16,6 +16,7 @@ from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
 from .fft import fft, fft2, ifft, ifft2
 from .init import ComplexIndependentFilters, ComplexInit
+from .utils import _check_complex_axis
 
 
 def conv1d_transpose(
@@ -335,6 +336,13 @@ class ComplexConv(Layer):
             raise ValueError(
                 "The channel dimension of the inputs should be defined. Found `None`."
             )
+        _check_complex_axis(
+            self,
+            input_shape,
+            channel_axis,
+            hint=f"The channel axis is axis {channel_axis} because data_format "
+            f"is '{self.data_format}'.",
+        )
         # Divide by 2 for real and complex input.
         input_dim = input_shape[channel_axis] // 2
         if False and self.transposed:

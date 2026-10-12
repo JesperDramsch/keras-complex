@@ -11,6 +11,7 @@ from tensorflow.keras.layers import InputSpec, Layer
 
 from .bn import ComplexBN as complex_normalization
 from .bn import sqrt_init
+from .utils import _check_complex_axis
 
 
 def layernorm(x, axis, epsilon, gamma, beta):
@@ -149,6 +150,13 @@ class ComplexLayerNorm(Layer):
                 "input tensor should have a defined dimension "
                 "but the layer received an input with shape " + str(input_shape) + "."
             )
+        _check_complex_axis(
+            self,
+            input_shape,
+            self.axis,
+            hint="Use the `axis` argument to choose the axis that holds the real "
+            "and imaginary parts.",
+        )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 
         gamma_shape = (input_shape[self.axis] // 2,)

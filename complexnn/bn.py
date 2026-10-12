@@ -11,6 +11,8 @@ import tensorflow.keras.backend as K
 from tensorflow.keras import constraints, initializers, regularizers
 from tensorflow.keras.layers import InputSpec, Layer
 
+from .utils import _check_complex_axis
+
 
 def sqrt_init(shape, dtype=None):
     value = (1 / np.sqrt(2)) * K.ones(shape)
@@ -352,6 +354,13 @@ class ComplexBatchNormalization(Layer):
                 "input tensor should have a defined dimension "
                 "but the layer received an input with shape " + str(input_shape) + "."
             )
+        _check_complex_axis(
+            self,
+            input_shape,
+            self.axis,
+            hint="Use the `axis` argument to choose the axis that holds the real "
+            "and imaginary parts.",
+        )
         self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
 
         param_shape = (input_shape[self.axis] // 2,)

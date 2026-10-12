@@ -7,7 +7,7 @@ from tensorflow.keras import activations, constraints, initializers, regularizer
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import InputSpec, Layer
 
-from .utils import _compute_fans
+from .utils import _check_complex_axis, _compute_fans
 
 
 class ComplexDense(Layer):
@@ -97,7 +97,7 @@ class ComplexDense(Layer):
 
     def build(self, input_shape):
         assert len(input_shape) == 2
-        assert input_shape[-1] % 2 == 0
+        _check_complex_axis(self, input_shape, -1)
         input_dim = input_shape[-1] // 2
         data_format = K.image_data_format()
         kernel_shape = (input_dim, self.units)
