@@ -426,11 +426,6 @@ class ComplexConv(Layer):
         self.built = True
 
     def call(self, inputs):
-        if self.data_format == "channels_first":
-            channel_axis = 1
-        else:
-            channel_axis = -1
-        input_dim = K.shape(inputs)[channel_axis] // 2
         if False and self.transposed:
             if self.rank == 1:
                 f_real = self.kernel[:, : self.filters, :]
@@ -548,24 +543,11 @@ class ComplexConv(Layer):
 
         # Performing complex convolution
 
-        f_real._keras_shape = self.kernel_shape
-        f_imag._keras_shape = self.kernel_shape
-
         cat_kernels_4_real = K.concatenate([f_real, -f_imag], axis=-2)
         cat_kernels_4_imag = K.concatenate([f_imag, f_real], axis=-2)
         cat_kernels_4_complex = K.concatenate(
             [cat_kernels_4_real, cat_kernels_4_imag], axis=-1
         )
-        if False and self.transposed:
-            cat_kernels_4_complex._keras_shape = self.kernel_size + (
-                2 * self.filters,
-                2 * input_dim,
-            )
-        else:
-            cat_kernels_4_complex._keras_shape = (
-                self.kernel_size + 2 * input_dim,
-                2 * self.filters,
-            )
 
         output = convFunc(inputs, cat_kernels_4_complex, **convArgs)
 
@@ -1146,7 +1128,6 @@ class WeightNorm_Conv(Conv):
             * normalized_weight
         )
         shaped_kernel = K.reshape(normalized_weight, ker_shape)
-        shaped_kernel._keras_shape = ker_shape
 
         convArgs = {
             "strides": self.strides[0] if self.rank == 1 else self.strides,

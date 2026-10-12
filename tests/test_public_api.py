@@ -11,8 +11,14 @@ PRIVATE_PREFIXES = ("tensorflow.python", "keras.src", "tf_keras.src", "keras._tf
 ALLOWED = {("conv.py", "tensorflow.python.keras.layers.convolutional")}
 
 
-def imported_modules(path):
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+def package_modules():
+    """Parse every module of the package, as (file name, syntax tree) pairs"""
+    package_dir = Path(complexnn.__file__).parent
+    for path in sorted(package_dir.glob("*.py")):
+        yield path.name, ast.parse(path.read_text(encoding="utf-8"))
+
+
+def imported_modules(tree):
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -25,11 +31,25 @@ class TestPublicImports(unittest.TestCase):
     """The package imports TensorFlow and Keras through public modules only"""
 
     def test_no_private_imports(self):
-        package_dir = Path(complexnn.__file__).parent
         found = {
-            (path.name, module)
-            for path in sorted(package_dir.glob("*.py"))
-            for module in imported_modules(path)
+            (name, module)
+            for name, tree in package_modules()
+            for module in imported_modules(tree)
             if module.startswith(PRIVATE_PREFIXES)
         }
         self.assertEqual(found, ALLOWED)
+
+
+class TestNoKerasShapeWrites(unittest.TestCase):
+    """No layer sets the Keras 1 `_keras_shape` attribute, which Keras 2 and 3 ignore"""
+
+    def test_no_keras_shape_writes(self):
+        found = [
+            (name, node.lineno)
+            for name, tree in package_modules()
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Attribute)
+            and node.attr == "_keras_shape"
+            and isinstance(node.ctx, ast.Store)
+        ]
+        self.assertEqual(found, [])
