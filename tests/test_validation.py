@@ -64,13 +64,33 @@ class TestComplexAxisValidation(unittest.TestCase):
             "axis 1 has size 1",
         )
 
-    def test_conv_transposed_odd_channels(self):
-        layer = conn.ComplexConv2D(2, 3, strides=2, padding="same", transposed=True)
-        self.assertLayoutError(layer, (8, 8, 3), "axis -1 has size 3")
+    def test_conv_zero_channels(self):
+        """A size of 0 is even, so only the "at least 2" condition rejects it"""
+        self.assertLayoutError(conn.ComplexConv1D(2, 3), (16, 0), "axis -1 has size 0")
+        self.assertLayoutError(
+            conn.ComplexConv2D(2, 3), (8, 8, 0), "axis -1 has size 0"
+        )
+        self.assertLayoutError(
+            conn.ComplexConv3D(2, 3), (8, 8, 8, 0), "axis -1 has size 0"
+        )
+        self.assertLayoutError(
+            conn.ComplexConv2D(2, 3, data_format="channels_first"),
+            (0, 8, 8),
+            "axis 1 has size 0",
+        )
+
+    def test_conv_transposed(self):
+        for size in (3, 1, 0):
+            with self.subTest(size=size):
+                layer = conn.ComplexConv2D(
+                    2, 3, strides=2, padding="same", transposed=True
+                )
+                self.assertLayoutError(layer, (8, 8, size), f"axis -1 has size {size}")
 
     def test_dense(self):
         self.assertLayoutError(conn.ComplexDense(4), (5,), "axis -1 has size 5")
         self.assertLayoutError(conn.ComplexDense(4), (1,), "axis -1 has size 1")
+        self.assertLayoutError(conn.ComplexDense(4), (0,), "axis -1 has size 0")
 
     def test_dense_undefined_size(self):
         self.assertLayoutError(
@@ -80,6 +100,7 @@ class TestComplexAxisValidation(unittest.TestCase):
     def test_batch_normalization(self):
         self.assertLayoutError(conn.ComplexBN(), (5,), "axis -1 has size 5")
         self.assertLayoutError(conn.ComplexBN(), (8, 8, 1), "axis -1 has size 1")
+        self.assertLayoutError(conn.ComplexBN(), (8, 0), "axis -1 has size 0")
         self.assertLayoutError(
             conn.ComplexBN(axis=1),
             (3, 8, 8),
@@ -90,6 +111,7 @@ class TestComplexAxisValidation(unittest.TestCase):
     def test_layer_normalization(self):
         self.assertLayoutError(conn.ComplexLayerNorm(), (3,), "axis -1 has size 3")
         self.assertLayoutError(conn.ComplexLayerNorm(), (8, 1), "axis -1 has size 1")
+        self.assertLayoutError(conn.ComplexLayerNorm(), (8, 0), "axis -1 has size 0")
         self.assertLayoutError(
             conn.ComplexLayerNorm(axis=1),
             (3, 8, 8),
@@ -102,6 +124,8 @@ class TestComplexAxisValidation(unittest.TestCase):
             with self.subTest(layer=layer_class.__name__):
                 self.assertLayoutError(layer_class(), (3,), "axis 1 has size 3")
                 self.assertLayoutError(layer_class(), (8, 5), "axis -1 has size 5")
+                self.assertLayoutError(layer_class(), (1,), "axis 1 has size 1")
+                self.assertLayoutError(layer_class(), (8, 0), "axis -1 has size 0")
 
     def test_get_parts_undefined_size(self):
         """An undefined size is left to the dynamic split in call"""
