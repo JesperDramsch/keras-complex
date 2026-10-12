@@ -1,0 +1,28 @@
+# Monthly updates, grouped into one pull request per ecosystem.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # pyproject.toml and docs/requirements.txt only set lower bounds. Keep them
+  # unless a new release falls outside them: tensorflow>=2.15 must not be raised,
+  # because TensorFlow 2.15 is how Keras 2 users run this package.
+  - package-ecosystem: pip
+    directories:
+      - /
+      - /docs
+    schedule:
+      interval: monthly
+    versioning-strategy: increase-if-necessary
+    commit-message:
+      prefix: build
+    groups:
+      python:
+        patterns: ["*"]
