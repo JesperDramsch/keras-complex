@@ -162,8 +162,10 @@ class TestTransposedConvTraining(unittest.TestCase):
         model = self._fit(
             conn.ComplexConv2D(2, 3, strides=2, padding="valid", transposed=True),
             (None, None, 4),
-            [rng.standard_normal((3, h, w, 4)).astype("float32")
-             for h, w in ((6, 6), (5, 9))],
+            [
+                rng.standard_normal((3, h, w, 4)).astype("float32")
+                for h, w in ((6, 6), (5, 9))
+            ],
         )
         x = rng.standard_normal((1, 5, 9, 4)).astype("float32")
         self.assertEqual(model.predict(x, verbose=0).shape, (1, 11, 19, 4))
