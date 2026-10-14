@@ -35,6 +35,90 @@ except ImportError:
             )
 
 
+def _transpose_output_shape(
+    inputs, kernel_size, filters, strides, padding, output_padding, data_format
+):
+    """Output shape of a transposed convolution, as a tensor.
+
+    The batch size, and any spatial size that is unknown when the layer is
+    traced, are read from the runtime shape of ``inputs``, so the layer works
+    with an unknown batch size and with variable-size inputs."""
+    rank = len(kernel_size)
+    static_shape = inputs.shape
+    dynamic_shape = tf.shape(inputs)
+    if data_format == "channels_first":
+        spatial_axes = range(2, 2 + rank)
+    else:
+        spatial_axes = range(1, 1 + rank)
+    if output_padding is None:
+        output_padding = (None,) * rank
+
+    spatial = []
+    for axis, size, stride, out_pad in zip(
+        spatial_axes, kernel_size, strides, output_padding
+    ):
+        length = static_shape[axis]
+        if length is None:
+            length = dynamic_shape[axis]
+        spatial.append(
+            conv_utils.deconv_output_length(
+                input_length=length,
+                filter_size=size,
+                padding=padding,
+                output_padding=out_pad,
+                stride=stride,
+            )
+        )
+
+    batch_size = dynamic_shape[0]
+    if data_format == "channels_first":
+        shape = [batch_size, filters, *spatial]
+    else:
+        shape = [batch_size, *spatial, filters]
+    return tf.stack([tf.cast(dim, tf.int32) for dim in shape])
+
+
+def _conv_transpose(
+    inputs,
+    filter,
+    kernel_size,
+    filters,
+    strides,
+    padding,
+    output_padding,
+    data_format,
+):
+    """Transposed convolution of rank 1, 2 or 3 with a forward-layout kernel.
+
+    Take a filter defined for forward convolution and adjust it for a
+    transposed convolution."""
+    rank = len(kernel_size)
+    output_shape = _transpose_output_shape(
+        inputs, kernel_size, filters, strides, padding, output_padding, data_format
+    )
+    # Swap the input and output channel axes of the forward kernel.
+    filter = tf.transpose(filter, (*range(rank), rank + 1, rank))
+    d_format = {
+        1: ("NWC", "NCW"),
+        2: ("NHWC", "NCHW"),
+        3: ("NDHWC", "NCDHW"),
+    }[rank][data_format == "channels_first"]
+    return tf.nn.conv_transpose(
+        inputs,
+        filter,
+        output_shape,
+        strides,
+        padding=padding.upper(),
+        data_format=d_format,
+    )
+
+
+def _as_tuple(value, rank):
+    if isinstance(value, (tuple, list)):
+        return tuple(value)
+    return (value,) * rank
+
+
 def conv1d_transpose(
     inputs,
     filter,
@@ -49,41 +133,15 @@ def conv1d_transpose(
 
     Take a filter defined for forward convolution and adjusts it for a
     transposed convolution."""
-    if isinstance(kernel_size, tuple):
-        kernel_size = kernel_size[0]
-    input_shape = inputs.shape
-    batch_size = input_shape[0]
-    if data_format == "channels_first":
-        w_axis = 2
-        d_format = "NCW"
-    else:
-        w_axis = 1
-        d_format = "NWC"
-
-    width = input_shape[w_axis]
-
-    # Infer the dynamic output shape:
-    out_width = conv_utils.deconv_output_length(
-        input_length=width,
-        filter_size=kernel_size,
-        padding=padding,
-        output_padding=output_padding,
-        stride=strides,
-    )
-
-    if data_format == "channels_first":
-        output_shape = (batch_size, filters, out_width)
-    else:
-        output_shape = (batch_size, out_width, filters)
-
-    filter = K.permute_dimensions(filter, (0, 2, 1))
-    return tf.nn.conv1d_transpose(
+    return _conv_transpose(
         inputs,
         filter,
-        output_shape,
-        strides,
-        padding=padding.upper(),
-        data_format=d_format,
+        _as_tuple(kernel_size, 1),
+        filters,
+        _as_tuple(strides, 1),
+        padding,
+        None if output_padding is None else _as_tuple(output_padding, 1),
+        data_format,
     )
 
 
@@ -101,41 +159,38 @@ def conv2d_transpose(
 
     Take a filter defined for forward convolution and adjusts it for a
     transposed convolution."""
-    input_shape = inputs.shape
-    batch_size = input_shape[0]
-    if data_format == "channels_first":
-        h_axis, w_axis = 2, 3
-    else:
-        h_axis, w_axis = 1, 2
-
-    height, width = input_shape[h_axis], input_shape[w_axis]
-    kernel_h, kernel_w = kernel_size
-    stride_h, stride_w = strides
-
-    # Infer the dynamic output shape:
-    out_height = conv_utils.deconv_output_length(
-        input_length=height,
-        filter_size=kernel_h,
-        padding=padding,
-        output_padding=output_padding,
-        stride=stride_h,
-    )
-    out_width = conv_utils.deconv_output_length(
-        input_length=width,
-        filter_size=kernel_w,
-        padding=padding,
-        output_padding=output_padding,
-        stride=stride_w,
+    return _conv_transpose(
+        inputs,
+        filter,
+        _as_tuple(kernel_size, 2),
+        filters,
+        _as_tuple(strides, 2),
+        padding,
+        None if output_padding is None else _as_tuple(output_padding, 2),
+        data_format,
     )
 
-    if data_format == "channels_first":
-        output_shape = (batch_size, filters, out_height, out_width)
-    else:
-        output_shape = (batch_size, out_height, out_width, filters)
 
-    filter = K.permute_dimensions(filter, (0, 1, 3, 2))
-    return K.conv2d_transpose(
-        inputs, filter, output_shape, strides, padding=padding, data_format=data_format
+def conv3d_transpose(
+    inputs,
+    filter,
+    kernel_size=None,
+    filters=None,
+    strides=(1, 1, 1),
+    padding="SAME",
+    output_padding=None,
+    data_format="channels_last",
+):
+    """Transposed 3D convolution with a kernel defined for forward convolution"""
+    return _conv_transpose(
+        inputs,
+        filter,
+        _as_tuple(kernel_size, 3),
+        filters,
+        _as_tuple(strides, 3),
+        padding,
+        None if output_padding is None else _as_tuple(output_padding, 3),
+        data_format,
     )
 
 
@@ -482,7 +537,11 @@ class ComplexConv(Layer):
             convArgs.pop("dilation_rate", None)
             convArgs["kernel_size"] = self.kernel_size
             convArgs["filters"] = 2 * self.filters
-            convFunc = {1: conv1d_transpose, 2: conv2d_transpose}[self.rank]
+            convFunc = {
+                1: conv1d_transpose,
+                2: conv2d_transpose,
+                3: conv3d_transpose,
+            }[self.rank]
         else:
             convFunc = {1: K.conv1d, 2: K.conv2d, 3: K.conv3d}[self.rank]
 
