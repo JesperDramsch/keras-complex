@@ -43,17 +43,15 @@ class TestPublicImports(unittest.TestCase):
         self.assertEqual(found, ALLOWED)
 
 
-class TestNoKerasShapeWrites(unittest.TestCase):
-    """No layer sets the Keras 1 `_keras_shape` attribute, which Keras 2 and 3 ignore"""
+class TestNoKerasShapeUse(unittest.TestCase):
+    """No layer reads or sets the Keras 1 `_keras_shape` attribute, which Keras 2 and 3 lack"""
 
-    def test_no_keras_shape_writes(self):
+    def test_no_keras_shape_use(self):
         found = [
             (name, node.lineno)
             for name, tree in package_modules()
             for node in ast.walk(tree)
-            if isinstance(node, ast.Attribute)
-            and node.attr == "_keras_shape"
-            and isinstance(node.ctx, ast.Store)
+            if isinstance(node, ast.Attribute) and node.attr == "_keras_shape"
         ]
         self.assertEqual(found, [])
 

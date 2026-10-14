@@ -6,6 +6,18 @@ import tensorflow.keras.backend as KB
 import tensorflow.keras.layers as KL
 from tensorflow.keras.utils import register_keras_serializable
 
+
+def _static_shape(x):
+    """Return the static shape of `x`, requiring every spatial dimension to be known"""
+    xshape = tuple(x.shape)
+    if any(dim is None for dim in xshape[1:]):
+        raise ValueError(
+            "Spectral pooling needs fully defined spatial dimensions, got shape "
+            f"{xshape}"
+        )
+    return xshape
+
+
 #
 # Spectral Pooling Layer
 #
@@ -13,19 +25,17 @@ from tensorflow.keras.utils import register_keras_serializable
 
 @register_keras_serializable(package="complexnn")
 class SpectralPooling1D(KL.Layer):
-    def __init__(self, topf=(0,), **kwargs):
-        super().__init__()
-        if "topf" in kwargs:
-            self.topf = (int(kwargs["topf"][0]),)
-            self.topf = (self.topf[0] // 2,)
-        elif "gamma" in kwargs:
-            self.gamma = (float(kwargs["gamma"][0]),)
-            self.gamma = (self.gamma[0] / 2,)
+    def __init__(self, topf=None, gamma=None, **kwargs):
+        super().__init__(**kwargs)
+        if topf is not None:
+            self.topf = (int(topf[0]) // 2,)
+        elif gamma is not None:
+            self.gamma = (float(gamma[0]) / 2,)
         else:
             raise RuntimeError("Must provide either topf= or gamma= !")
 
     def call(self, x, mask=None):
-        xshape = x._keras_shape
+        xshape = _static_shape(x)
         if hasattr(self, "topf"):
             topf = self.topf
         else:
@@ -58,19 +68,17 @@ class SpectralPooling1D(KL.Layer):
 
 @register_keras_serializable(package="complexnn")
 class SpectralPooling2D(KL.Layer):
-    def __init__(self, **kwargs):
-        super().__init__()
-        if "topf" in kwargs:
-            self.topf = (int(kwargs["topf"][0]), int(kwargs["topf"][1]))
-            self.topf = (self.topf[0] // 2, self.topf[1] // 2)
-        elif "gamma" in kwargs:
-            self.gamma = (float(kwargs["gamma"][0]), float(kwargs["gamma"][1]))
-            self.gamma = (self.gamma[0] / 2, self.gamma[1] / 2)
+    def __init__(self, topf=None, gamma=None, **kwargs):
+        super().__init__(**kwargs)
+        if topf is not None:
+            self.topf = (int(topf[0]) // 2, int(topf[1]) // 2)
+        elif gamma is not None:
+            self.gamma = (float(gamma[0]) / 2, float(gamma[1]) / 2)
         else:
             raise RuntimeError("Must provide either topf= or gamma= !")
 
     def call(self, x, mask=None):
-        xshape = x._keras_shape
+        xshape = _static_shape(x)
         if hasattr(self, "topf"):
             topf = self.topf
         else:
