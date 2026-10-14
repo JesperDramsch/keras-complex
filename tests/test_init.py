@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import tensorflow as tf
 
 import complexnn as conn
 
@@ -29,3 +30,35 @@ class TestInitializerConfig(unittest.TestCase):
                 clone = type(init).from_config(init.get_config())
                 self.assertEqual(clone.get_config(), init.get_config())
                 np.testing.assert_array_equal(clone(self.shape), init(self.shape))
+
+
+class TestSqrtInit(unittest.TestCase):
+    def test_shape_dtype_and_values(self):
+        for shape in ((), (3,), (2, 3)):
+            for dtype in (None, "float16", "float32", "float64"):
+                with self.subTest(shape=shape, dtype=dtype):
+                    values = np.asarray(conn.SqrtInit()(shape, dtype=dtype))
+                    expected_dtype = np.dtype(dtype or tf.keras.backend.floatx())
+                    self.assertEqual(values.shape, shape)
+                    self.assertEqual(values.dtype, expected_dtype)
+                    np.testing.assert_allclose(
+                        values, 2**-0.5, rtol=np.finfo(expected_dtype).eps
+                    )
+
+    def test_inside_tf_function(self):
+        @tf.function
+        def initialize():
+            return conn.SqrtInit()((2, 3), dtype=tf.float64)
+
+        values = initialize()
+        self.assertEqual(values.dtype, tf.float64)
+        np.testing.assert_allclose(values, np.full((2, 3), 2**-0.5), rtol=1e-15)
+
+    def test_dense_initializer(self):
+        layer = tf.keras.layers.Dense(
+            2, kernel_initializer=conn.SqrtInit(), use_bias=False, dtype="float64"
+        )
+        output = layer(tf.ones((1, 3), dtype=tf.float64))
+        self.assertEqual(layer.kernel.dtype, "float64")
+        np.testing.assert_allclose(layer.kernel, np.full((3, 2), 2**-0.5), rtol=1e-15)
+        np.testing.assert_allclose(output, np.full((1, 2), 3 * 2**-0.5), rtol=1e-15)
