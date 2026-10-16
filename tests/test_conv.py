@@ -124,3 +124,57 @@ class TestConvConfig(unittest.TestCase):
                 np.testing.assert_array_equal(
                     np.asarray(clone.kernel), np.asarray(layer.kernel)
                 )
+
+
+class TestTransposedConvTraining(unittest.TestCase):
+    """Transposed convolutions train with unknown batch and spatial sizes"""
+
+    def _fit(self, layer, input_shape, batches):
+        inputs = Input(shape=input_shape)
+        model = Model(inputs=inputs, outputs=layer(inputs))
+        model.compile(optimizer="sgd", loss="mse")
+        for x in batches:
+            y = model.predict(x, verbose=0)
+            model.fit(x, np.zeros_like(y), batch_size=2, epochs=1, verbose=0)
+        return model
+
+    def test_conv1d_transposed_fit(self):
+        rng = np.random.default_rng(0)
+        model = self._fit(
+            conn.ComplexConv1D(2, 3, strides=2, padding="same", transposed=True),
+            (16, 4),
+            [rng.standard_normal((5, 16, 4)).astype("float32")],
+        )
+        self.assertEqual(model.output_shape, (None, 32, 4))
+
+    def test_conv1d_transposed_variable_length(self):
+        rng = np.random.default_rng(0)
+        model = self._fit(
+            conn.ComplexConv1D(2, 3, strides=2, padding="same", transposed=True),
+            (None, 4),
+            [rng.standard_normal((3, n, 4)).astype("float32") for n in (8, 13)],
+        )
+        x = rng.standard_normal((1, 11, 4)).astype("float32")
+        self.assertEqual(model.predict(x, verbose=0).shape, (1, 22, 4))
+
+    def test_conv2d_transposed_variable_size(self):
+        rng = np.random.default_rng(0)
+        model = self._fit(
+            conn.ComplexConv2D(2, 3, strides=2, padding="valid", transposed=True),
+            (None, None, 4),
+            [
+                rng.standard_normal((3, h, w, 4)).astype("float32")
+                for h, w in ((6, 6), (5, 9))
+            ],
+        )
+        x = rng.standard_normal((1, 5, 9, 4)).astype("float32")
+        self.assertEqual(model.predict(x, verbose=0).shape, (1, 11, 19, 4))
+
+    def test_conv3d_transposed_fit(self):
+        rng = np.random.default_rng(0)
+        model = self._fit(
+            conn.ComplexConv3D(2, 3, strides=2, padding="same", transposed=True),
+            (4, 4, 4, 4),
+            [rng.standard_normal((3, 4, 4, 4, 4)).astype("float32")],
+        )
+        self.assertEqual(model.output_shape, (None, 8, 8, 8, 4))
