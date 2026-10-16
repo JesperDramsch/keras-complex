@@ -55,7 +55,7 @@ def _transpose_output_shape(
 
     spatial = []
     for axis, size, stride, out_pad in zip(
-        spatial_axes, kernel_size, strides, output_padding
+        spatial_axes, kernel_size, strides, output_padding, strict=True
     ):
         length = static_shape[axis]
         if length is None:
