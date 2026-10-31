@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import utils.session
 import numpy as np
 import tensorflow.keras as KE
 import tensorflow.keras.backend as KB
