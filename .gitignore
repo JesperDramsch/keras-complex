@@ -43,7 +43,6 @@ venv
 .venv
 
 # IDE
-.vscode
 .idea
 
 dist/*
@@ -53,3 +52,5 @@ __pycache__/*
 # Sphinx output and the API pages sphinxcontrib-apidoc generates
 docs/build/
 docs/source/api/
+config.bat
+node_modules
